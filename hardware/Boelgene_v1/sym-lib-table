@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name "Pico")(type "KiCad")(uri "/home/tom/TES/TES_Boelgene/hardware/kicad_components/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.kicad_sym")(options "")(descr ""))
+  (lib (name "PT8211")(type "KiCad")(uri "/home/tom/TES/TES_Boelgene/hardware/kicad_components/pt8211-pt8211.kicad_sym")(options "")(descr ""))
 )
