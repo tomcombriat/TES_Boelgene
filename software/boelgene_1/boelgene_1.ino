@@ -1,4 +1,11 @@
+/*
+Copyright 2024 Thomas Combriat
 
+This is licensed under the GPL Licence
+
+This is the main code of the first version of Boelgene, a replica of Ondes Martenot
+created for Oslo Skaper Festival, 2024.
+*/
 
 #include "MozziConfigValues.h"  // for named option values
 #define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
