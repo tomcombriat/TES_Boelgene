@@ -105,9 +105,12 @@ void setup() {
   pinMode(refp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(octm_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(octp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
+  pinMode(led_pin,OUTPUT);
+  digitalWrite(led_pin, HIGH);
 }
 
 void setup1() {
+ // Serial.begin(115200);
   SPI.setRX(16);
   SPI.setTX(19);
   SPI.setSCK(18);
