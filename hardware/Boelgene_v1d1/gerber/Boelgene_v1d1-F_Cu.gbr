@@ -1,12 +1,12 @@
 %TF.GenerationSoftware,KiCad,Pcbnew,6.0.11+dfsg-1~bpo11+1*%
-%TF.CreationDate,2025-01-21T21:26:14+01:00*%
+%TF.CreationDate,2025-01-22T19:44:48+01:00*%
 %TF.ProjectId,Boelgene_v1d1,426f656c-6765-46e6-955f-763164312e6b,rev?*%
 %TF.SameCoordinates,Original*%
 %TF.FileFunction,Copper,L1,Top*%
 %TF.FilePolarity,Positive*%
 %FSLAX46Y46*%
 G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
-G04 Created by KiCad (PCBNEW 6.0.11+dfsg-1~bpo11+1) date 2025-01-21 21:26:14*
+G04 Created by KiCad (PCBNEW 6.0.11+dfsg-1~bpo11+1) date 2025-01-22 19:44:48*
 %MOMM*%
 %LPD*%
 G01*
@@ -407,11 +407,11 @@ X125475645Y-130480041D02*
 X124878722Y-129359067D01*
 D13*
 %TO.P,R3,1*%
-%TO.N,Net-(TP17-Pad1)*%
+%TO.N,Net-(R3-Pad1)*%
 X38100000Y-117856000D03*
 D14*
 %TO.P,R3,2*%
-%TO.N,Net-(U1-Pad9)*%
+%TO.N,Net-(R3-Pad2)*%
 X45720000Y-117856000D03*
 %TD*%
 D15*
@@ -432,7 +432,7 @@ X43688000Y-84836000D03*
 X59944000Y-81788000D03*
 %TD*%
 %TO.P,TP17,1,1*%
-%TO.N,Net-(TP17-Pad1)*%
+%TO.N,Net-(R3-Pad1)*%
 X54356000Y-126492000D03*
 %TD*%
 %TO.P,TP16,1,1*%
@@ -541,7 +541,7 @@ D22*
 X52578000Y-121158000D03*
 D20*
 %TO.P,U1,9,GPIO6*%
-%TO.N,Net-(U1-Pad9)*%
+%TO.N,Net-(R3-Pad2)*%
 X55118000Y-121158000D03*
 D21*
 X55118000Y-122058000D03*
