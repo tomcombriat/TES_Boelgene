@@ -1577,7 +1577,7 @@
     (property "Reference" "TP28" (id 0) (at 134.239 75.6193 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
-    (property "Value" "AI27" (id 1) (at 134.239 78.1562 90)
+    (property "Value" "AI27 - Ribbon" (id 1) (at 134.239 78.1562 90)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Footprint" "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm" (id 2) (at 129.54 81.534 0)
@@ -3565,7 +3565,7 @@
       (reference "TP27") (unit 1) (value "AI28") (footprint "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm")
     )
     (path "/082ed3f3-5b9a-4eac-8ff0-91efa9ced314"
-      (reference "TP28") (unit 1) (value "AI27") (footprint "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm")
+      (reference "TP28") (unit 1) (value "AI27 - Ribbon") (footprint "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm")
     )
     (path "/f008859b-5d8e-4290-b5ee-6e6160db2859"
       (reference "TP32") (unit 1) (value "pot5") (footprint "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm")
