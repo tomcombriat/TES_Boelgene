@@ -23,11 +23,11 @@ There are a few analog signals that are measured:
 
 ### Pressure (touch):
 
-These are measured wih the help of resisor dividers (RV1-4) and are to be connected to force sensitive resistors (range 1.5kg).
+These are measured wih the help of resisor dividers (RV1-4) and are to be connected to force sensitive resistors (range 1.5kg, ref in BOM). The pots are adjusting the sensitivity of the pressure sensors.
 
 ## Ribbon
 
-This is to be connected to the central pin of a 10 turns, 10k linear potentiometer. The other two pins should be connected to GNDA and ADC_ref.
+This is to be connected to the central pin of a 10 turns, 10k linear potentiometer. The other two pins should be connected to GNDA and ADC_ref. 
 
 ## Synthesis input
 
