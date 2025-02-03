@@ -8,6 +8,11 @@ of a small Ondes Nartenot replica.
 
 It features four pressure buttons instead of one, allowing
 different notes to be played simulteanously.
+
+
+TODO: 
+ - pressure calib
+ - tame volume when pressure on lpf?
 */
 
 #include "MozziConfigValues.h"  // for named option values
@@ -72,18 +77,68 @@ BiPotMult mod2RatioPot;
 
 #define N_VOICES 4
 #define OSC_NUM_CELLS 2048
-struct voice {
+class voice {
+public:  // no offense, most things in public, I know what I am doing
   Oscil<OSC_NUM_CELLS, AUDIO_RATE> aCos;
   Oscil<OSC_NUM_CELLS, AUDIO_RATE> aMod1;
   Oscil<OSC_NUM_CELLS, AUDIO_RATE> aMod2;
   Oscil<OSC_NUM_CELLS, AUDIO_RATE> aSub;
   //AudioDelayFeedback<2048> aDel;
   SFix<4, 0> transpose;
+
   uint8_t volume;
   LowPassFilter16 lpf;
   uint16_t cutoff;
+
+  void setFreq(UFix<16, 16> _freq) {
+    //freq = _freq;
+    anti_alias(_freq, modulation_amount1, modulation_amount2);
+    aCos.setFreq(freq);
+    aSub.setFreq(freq.sR<1>());
+    aMod1.setFreq(freq * mod1Ratio);
+    aMod2.setFreq(freq * mod2Ratio);
+  };
+
+  void setMod1(uint16_t mod1) {
+    //modulation_amount1 = mod1;
+    anti_alias(freq, mod1, modulation_amount2);
+  };
+  void setMod2(uint16_t mod2) {
+    //modulation_amount2 = mod2;
+    anti_alias(freq, modulation_amount1, mod2);
+  };
+
+  uint16_t getMod1() {
+    return modulation_amount1;
+  };
+  uint16_t getMod2() {
+    return modulation_amount2;
+  };
+
+
+
+private:
   uint16_t modulation_amount1, modulation_amount2;
+  UFix<16, 16> freq;
+  void anti_alias(UFix<16, 16> _freq, uint16_t mod1, uint16_t mod2) {
+    UFix<0, 8> B = 0.0075 * 2;  // 3 removes more aliases, but changes a lot the sound
+    auto den = (_freq * mod1Ratio * (UFixAuto<1>() + ((B * mod2Ratio * (UFix<16, 0>(mod2).sR<7>())) /*>> 7*/)));
+    //uint32_t m1 = (uint32_t(16000 * 74) / den.asInt()) << 4;
+    uint32_t m1 = (uint32_t(16000 * 74) / den.asInt()) << 4;
+    /* if (transpose == UFix<1,0>(0)){
+    Serial.print(mod1);
+    Serial.print(" ");
+    Serial.print(m1);
+    Serial.print(" ");
+    Serial.println((B * mod2Ratio * UFix<16, 0>(mod2).sR<7>()).asFloat());
+    }*/
+    if (m1 < mod1) modulation_amount1 = m1;
+    else modulation_amount1 = mod1;
+    freq = _freq;
+    modulation_amount2 = mod2;
+  };
 };
+
 
 voice voices[N_VOICES];
 
@@ -124,7 +179,7 @@ void setup() {
 }
 
 void setup1() {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   SPI.setRX(16);
   SPI.setTX(19);
   SPI.setSCK(18);
@@ -148,7 +203,7 @@ void loop1() {
 
   if (octp.has_been_released()) {
     octave++;
-    if (octave > 4) octave = 4;
+    if (octave > 3) octave = 3;
   }
 
   // Parameters checking
@@ -163,10 +218,10 @@ void loop1() {
 
     //// MODULATION AMOUNTS
     mod1Pot.setValue(adc.analogRead(pot3) << 6);
-    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].modulation_amount1 = mod1Pot.getValue(voices[i].volume << 8);
+    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod1(mod1Pot.getValue(voices[i].volume << 8));
 
     //mod2Pot.setValue(adc.analogRead(pot5) << 6);
-    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].modulation_amount2 = mod2Pot.getValue(voices[i].volume << 8);
+    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod2(mod2Pot.getValue(voices[i].volume << 8));
 
 
     //// MODULATION RATIOS
@@ -208,7 +263,7 @@ void loop1() {
   voices[2].volume = adc.analogRead(pressure_pin3) >> 2;
   voices[3].volume = adc.analogRead(pressure_pin4) >> 2;
 
-  //Serial.println(mod1Ratio.asFloat());
+  // anti_alias(voices[0]);
 }
 
 
@@ -224,16 +279,20 @@ void updateControl() {
     mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
   }
 
+  mod2Pot.setValue(mozziAnalogRead<16>(pot5));
+
   midi_base_note = mapper.map(mozziAnalogRead<12>(pitch_pin));
   midi_base_note = midi_base_note + UFixAuto<12>() * SFix<3, 0>(octave);
-  mod2Pot.setValue(mozziAnalogRead<16>(pot5));
+
 
   for (uint8_t i = 0; i < N_VOICES; i++) {
     auto freq = mtof(midi_base_note + voices[i].transpose);
+    voices[i].setFreq(freq);
+    /* voices[i].freq = freq;
     voices[i].aCos.setFreq(freq);
     voices[i].aSub.setFreq(freq.sR<1>());
     voices[i].aMod1.setFreq(freq * mod1Ratio);
-    voices[i].aMod2.setFreq(freq * mod2Ratio);
+    voices[i].aMod2.setFreq(freq * mod2Ratio);*/
     //voices[i].aSub.setFreq(mtof(midi_base_note + voices[i].transpose - SFixAuto<12>()));
   }
 
@@ -247,13 +306,13 @@ AudioOutput updateAudio() {
   int32_t sample = 0;
   if (mod1Ratio != UFix<2, 8>(0) && mod2Ratio != UFix<2, 8>(0)) {
     for (uint8_t i = 0; i < N_VOICES; i++) {
-      int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].modulation_amount1 * voices[i].aMod1.phMod((voices[i].modulation_amount2 * voices[i].aMod2.next()) >> 7)) >> 4);
+      int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].getMod1() * voices[i].aMod1.phMod((voices[i].getMod2() * voices[i].aMod2.next()) >> 7)) >> 4);
       sub_sample = voices[i].lpf.next(sub_sample * voices[i].volume);
       sample += sub_sample;
     }
   } else if (mod2Ratio == UFix<2, 8>(0)) {
     for (uint8_t i = 0; i < N_VOICES; i++) {
-      int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].modulation_amount1 * voices[i].aMod1.next()) >> 4);
+      int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].getMod1() * voices[i].aMod1.next()) >> 4);
       sub_sample = voices[i].lpf.next(sub_sample * voices[i].volume);
       sample += sub_sample;
     }
