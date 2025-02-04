@@ -31,7 +31,6 @@ TODO:
 #include <tables/cos2048_int8.h>
 #include <ResonantFilter.h>
 #include <FixMathMapper.h>
-//#include <AudioDelayFeedback.h>
 #include "BiPot.h"
 #include <MetaOscil.h>
 #include "Oscils.h"
@@ -69,11 +68,13 @@ UFix<2, 8> mod2Ratio, prevMod2Ratio;
 
 unsigned long last_update_time = 0;
 
+
+// Maybe boost back to 1 once pressure properly calibrated?
 BiPotMultBoost cutoffPot(10, 8, 2);
 BiPotMultBoost mod1Pot(10, 8, 2);
 BiPotMultBoost mod1RatioPot(10);
 
-BiPotMultBoost mod2Pot(12,8,2);  // 12 because we use an internal DAC here, and not the external 10 bits dac
+BiPotMultBoost mod2Pot(12, 8, 2);  // 12 because we use an internal DAC here, and not the external 10 bits dac
 BiPotMultBoost mod2RatioPot(10);
 
 
@@ -93,7 +94,6 @@ public:  // no offense, most things in public, I know what I am doing
   uint16_t cutoff;
 
   void setFreq(UFix<16, 16> _freq) {
-    //freq = _freq;
     anti_alias(_freq, modulation_amount1, modulation_amount2);
     aCos.setFreq(freq);
     aSub.setFreq(freq.sR<1>());
@@ -102,11 +102,9 @@ public:  // no offense, most things in public, I know what I am doing
   };
 
   void setMod1(uint16_t mod1) {
-    //modulation_amount1 = mod1;
     anti_alias(freq, mod1, modulation_amount2);
   };
   void setMod2(uint16_t mod2) {
-    //modulation_amount2 = mod2;
     anti_alias(freq, modulation_amount1, mod2);
   };
 
@@ -123,18 +121,10 @@ private:
   uint16_t modulation_amount1, modulation_amount2;
   UFix<16, 16> freq;
   void anti_alias(UFix<16, 16> _freq, uint16_t mod1, uint16_t mod2) {
-    UFix<0, 8> B = 0.0075 * 2;  // 3 removes more aliases, but changes a lot the sound
-    auto den = (_freq * mod1Ratio * (UFixAuto<1>() + ((B * mod2Ratio * (UFix<16, 0>(mod2).sR<7>())) /*>> 7*/)));
-    //uint32_t m1 = (uint32_t(16000 * 74) / den.asInt()) << 4;
+    UFix<0, 8> B = 0.0075 * 2;                                                                           // 3 removes more aliases, but changes a lot the sound
+    auto den = (_freq * mod1Ratio * (UFixAuto<1>() + ((B * mod2Ratio * (UFix<16, 0>(mod2).sR<7>())))));  // denominator
     uint32_t m1 = (uint32_t(16000 * 74) / den.asInt()) << 4;
-    /* if (transpose == UFix<1,0>(0)){
-    Serial.print(mod1);
-    Serial.print(" ");
-    Serial.print(m1);
-    Serial.print(" ");
-    Serial.println((B * mod2Ratio * UFix<16, 0>(mod2).sR<7>()).asFloat());
-    }*/
-    if (m1 < mod1) modulation_amount1 = m1;
+    if (m1 < mod1) modulation_amount1 = m1;  // if mod1 too big, we tame down to m1, limit to not have aliases
     else modulation_amount1 = mod1;
     freq = _freq;
     modulation_amount2 = mod2;
@@ -148,7 +138,6 @@ void setup() {
 
   // Voices initialization
   for (int i = 0; i < N_VOICES; i++) {
-    //voices[i].aSaw.setTable(SAW2048_DATA);
     voices[i].aCos.setTable(COS2048_DATA);
     voices[i].aMod1.setTable(COS2048_DATA);
     voices[i].aMod2.setTable(COS2048_DATA);
@@ -214,8 +203,6 @@ void loop1() {
 
     // LPF parameters checking
     resonance = adc.analogRead(pot1) << 6;
-    //cutoffPot.setValue(adc.analogRead(pot0) << 6);
-    //for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume << 8);
 
     cutoffPot.setValue(adc.analogRead(pot0));
     for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume);
@@ -225,7 +212,7 @@ void loop1() {
     mod1Pot.setValue(adc.analogRead(pot3));
     for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod1(mod1Pot.getValue(voices[i].volume));
 
-    //mod2Pot.setValue(adc.analogRead(pot5) << 6);
+    // checked in updateControl
     for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod2(mod2Pot.getValue(voices[i].volume));
 
 
@@ -240,8 +227,6 @@ void loop1() {
           voices[i].aCos.setPhaseFractional(0);
           voices[i].aMod1.setPhaseFractional(0);
           voices[i].aMod2.setPhaseFractional(0);
-          //voices[i].aMod1.setPhaseFractional(voices[i].aCos.getPhaseFractional());
-          //voices[i].aMod2.setPhaseFractional(voices[i].aCos.getPhaseFractional());
         }
       }
     }
@@ -256,8 +241,6 @@ void loop1() {
           voices[i].aCos.setPhaseFractional(0);
           voices[i].aMod1.setPhaseFractional(0);
           voices[i].aMod2.setPhaseFractional(0);
-          //voices[i].aMod2.setPhaseFractional(voices[i].aCos.getPhaseFractional());
-          //voices[i].aMod1.setPhaseFractional(voices[i].aCos.getPhaseFractional());
         }
       }
     }
@@ -267,8 +250,6 @@ void loop1() {
   voices[1].volume = adc.analogRead(pressure_pin2) >> 2;
   voices[2].volume = adc.analogRead(pressure_pin3) >> 2;
   voices[3].volume = adc.analogRead(pressure_pin4) >> 2;
-
-  // anti_alias(voices[0]);
 }
 
 
@@ -293,12 +274,6 @@ void updateControl() {
   for (uint8_t i = 0; i < N_VOICES; i++) {
     auto freq = mtof(midi_base_note + voices[i].transpose);
     voices[i].setFreq(freq);
-    /* voices[i].freq = freq;
-    voices[i].aCos.setFreq(freq);
-    voices[i].aSub.setFreq(freq.sR<1>());
-    voices[i].aMod1.setFreq(freq * mod1Ratio);
-    voices[i].aMod2.setFreq(freq * mod2Ratio);*/
-    //voices[i].aSub.setFreq(mtof(midi_base_note + voices[i].transpose - SFixAuto<12>()));
   }
 
 

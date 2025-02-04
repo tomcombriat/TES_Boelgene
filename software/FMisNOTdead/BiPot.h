@@ -60,7 +60,7 @@ public:
     // else return uint16_t((uint32_t(input) * value) >> 16);
     else 
     {
-      uint32_t ret = (uint32_t(input) * value * multiplier) >> (nBitsIn + nBitsMult - 16);
+      uint32_t ret = (uint32_t(input) * value * multiplier) >> (nBitsIn + nBitsMult - 17);
       if (ret > 65535) return 65535;
       else return uint16_t(ret);
       //return uint16_t((uint32_t(input) * value) >> (nBitsIn + nBitsMult - 16));
