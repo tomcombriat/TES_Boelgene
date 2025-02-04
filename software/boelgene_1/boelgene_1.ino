@@ -31,7 +31,7 @@ created for Oslo Skaper Festival, 2024.
 #include <MCP3XXX.h>
 
 
-FixMathMapper<UFix<12, 0>, UFix<7, 9>> mapper;
+FixMathMapperFull<UFix<12, 0>, UFix<7, 9>> mapper;
 
 MCP3XXX_<10, 8, 300000> adc;
 

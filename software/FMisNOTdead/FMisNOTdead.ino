@@ -39,7 +39,7 @@ TODO:
 #include <MCP3XXX.h>
 
 
-FixMathMapper<UFix<12, 0>, UFix<7, 9>> mapper;
+FixMathMapperFull<UFix<12, 0>, UFix<7, 9>> mapper;
 
 // ADC
 MCP3XXX_<10, 8, 300000> adc;
