@@ -13,6 +13,7 @@ different notes to be played simulteanously.
 TODO: 
  - pressure calib
  - tame volume when pressure on lpf?
+ - cleanup (separate the voice class for god sake)
 */
 
 #include "MozziConfigValues.h"  // for named option values
@@ -68,11 +69,12 @@ UFix<2, 8> mod2Ratio, prevMod2Ratio;
 
 unsigned long last_update_time = 0;
 
-BiPotMult cutoffPot;
-BiPotMult mod1Pot;
-BiPotMult mod1RatioPot;
-BiPotMult mod2Pot;
-BiPotMult mod2RatioPot;
+BiPotMultBoost cutoffPot(10, 8, 2);
+BiPotMultBoost mod1Pot(10, 8, 2);
+BiPotMultBoost mod1RatioPot(10);
+
+BiPotMultBoost mod2Pot(12,8,2);  // 12 because we use an internal DAC here, and not the external 10 bits dac
+BiPotMultBoost mod2RatioPot(10);
 
 
 #define N_VOICES 4
@@ -179,7 +181,7 @@ void setup() {
 }
 
 void setup1() {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   SPI.setRX(16);
   SPI.setTX(19);
   SPI.setSCK(18);
@@ -212,23 +214,26 @@ void loop1() {
 
     // LPF parameters checking
     resonance = adc.analogRead(pot1) << 6;
-    cutoffPot.setValue(adc.analogRead(pot0) << 6);
-    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume << 8);
+    //cutoffPot.setValue(adc.analogRead(pot0) << 6);
+    //for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume << 8);
+
+    cutoffPot.setValue(adc.analogRead(pot0));
+    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume);
 
 
     //// MODULATION AMOUNTS
-    mod1Pot.setValue(adc.analogRead(pot3) << 6);
-    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod1(mod1Pot.getValue(voices[i].volume << 8));
+    mod1Pot.setValue(adc.analogRead(pot3));
+    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod1(mod1Pot.getValue(voices[i].volume));
 
     //mod2Pot.setValue(adc.analogRead(pot5) << 6);
-    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod2(mod2Pot.getValue(voices[i].volume << 8));
+    for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod2(mod2Pot.getValue(voices[i].volume));
 
 
     //// MODULATION RATIOS
-    mod1RatioPot.setValue(adc.analogRead(pot2) << 6);
-    if (mod1RatioPot.getMult()) mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw() >> 6);
+    mod1RatioPot.setValue(adc.analogRead(pot2));
+    if (mod1RatioPot.getMult()) mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw());
     else {  // constrained ratio
-      mod1Ratio = UFix<2, 1>(mod1Ratio.fromRaw(mod1RatioPot.getValueRaw() >> 6));
+      mod1Ratio = UFix<2, 1>(mod1Ratio.fromRaw(mod1RatioPot.getValueRaw()));
       if (prevMod1Ratio != mod1Ratio) {
         prevMod1Ratio = mod1Ratio;
         for (uint8_t i = 0; i < N_VOICES; i++) {  // re-align the phase (pointless in free mod)
@@ -241,10 +246,10 @@ void loop1() {
       }
     }
 
-    mod2RatioPot.setValue(adc.analogRead(pot4) << 6);
-    if (mod2RatioPot.getMult()) mod2Ratio = mod2Ratio.fromRaw(mod2RatioPot.getValueRaw() >> 6);
+    mod2RatioPot.setValue(adc.analogRead(pot4));
+    if (mod2RatioPot.getMult()) mod2Ratio = mod2Ratio.fromRaw(mod2RatioPot.getValueRaw());
     else {  // constrained ratio
-      mod2Ratio = UFix<2, 1>(mod2Ratio.fromRaw(mod2RatioPot.getValueRaw() >> 6));
+      mod2Ratio = UFix<2, 1>(mod2Ratio.fromRaw(mod2RatioPot.getValueRaw()));
       if (prevMod2Ratio != mod2Ratio) {
         prevMod2Ratio = mod2Ratio;
         for (uint8_t i = 0; i < N_VOICES; i++) {  // re-align the phase (pointless in free mod)
@@ -279,7 +284,7 @@ void updateControl() {
     mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
   }
 
-  mod2Pot.setValue(mozziAnalogRead<16>(pot5));
+  mod2Pot.setValue(mozziAnalogRead<12>(pot5));
 
   midi_base_note = mapper.map(mozziAnalogRead<12>(pitch_pin));
   midi_base_note = midi_base_note + UFixAuto<12>() * SFix<3, 0>(octave);
