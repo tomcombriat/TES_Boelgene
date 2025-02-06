@@ -37,9 +37,14 @@ TODO:
 
 #include <SPI.h>
 #include <MCP3XXX.h>
+#include "config.h"
 
 
 FixMathMapperFull<UFix<12, 0>, UFix<7, 9>> mapper;
+FixMathMapperFull<UFix<12, 0>, UFix<8, 0>, true> pressure0Mapper;
+FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure1Mapper;
+FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure2Mapper;
+FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure3Mapper;
 
 // ADC
 MCP3XXX_<10, 8, 300000> adc;
@@ -48,7 +53,7 @@ MCP3XXX_<10, 8, 300000> adc;
 // Pin mapping
 const uint8_t pot0 = 3, pot1 = 4, pot2 = 5, pot3 = 6, pot4 = 7, pot5 = 28;
 const uint8_t pitch_pin = 27, octm_pin = 9, octp_pin = 8, refm_pin = 7, refp_pin = 3, led_pin = 6;
-const uint8_t pressure_pin1 = 26, pressure_pin2 = 0, pressure_pin3 = 1, pressure_pin4 = 2;
+const uint8_t pressure_pin0 = 26, pressure_pin1 = 0, pressure_pin2 = 1, pressure_pin3 = 2;
 
 // Octaves plus and minus buttons
 Button octm(octm_pin, false);
@@ -71,10 +76,10 @@ unsigned long last_update_time = 0;
 
 // Maybe boost back to 1 once pressure properly calibrated?
 BiPotMultBoost cutoffPot(10, 8, 2);
-BiPotMultBoost mod1Pot(10, 8, 2);
+BiPotMultBoost mod1Pot(10, 8, 1);
 BiPotMultBoost mod1RatioPot(10);
 
-BiPotMultBoost mod2Pot(12, 8, 2);  // 12 because we use an internal DAC here, and not the external 10 bits dac
+BiPotMultBoost mod2Pot(12, 8, 1);  // 12 because we use an internal DAC here, and not the external 10 bits dac
 BiPotMultBoost mod2RatioPot(10);
 
 
@@ -148,7 +153,7 @@ void setup() {
   voices[2].transpose = 3;
   voices[3].transpose = 7;
 
-  pinMode(pressure_pin1, INPUT);
+  pinMode(pressure_pin0, INPUT);
   pinMode(pitch_pin, INPUT);
   pinMode(pot5, INPUT);
 
@@ -157,6 +162,11 @@ void setup() {
 
   // Mapper from rotary pot value to midi note (from FixMath)
   mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
+
+  pressure0Mapper.setBounds(PRESSURE0_MIN, PRESSURE0_MAX, 0, 255);
+  pressure1Mapper.setBounds(PRESSURE1_MIN, PRESSURE1_MAX, 0, 255);
+  pressure2Mapper.setBounds(PRESSURE2_MIN, PRESSURE2_MAX, 0, 255);
+  pressure3Mapper.setBounds(PRESSURE3_MIN, PRESSURE3_MAX, 0, 255);
 
 
 
@@ -247,9 +257,9 @@ void loop1() {
   }
 
   // Volume checking for additionnal buttons (here because async is not available)
-  voices[1].volume = adc.analogRead(pressure_pin2) >> 2;
-  voices[2].volume = adc.analogRead(pressure_pin3) >> 2;
-  voices[3].volume = adc.analogRead(pressure_pin4) >> 2;
+  voices[1].volume = pressure1Mapper.map(adc.analogRead(pressure_pin1)).asRaw();
+  voices[2].volume = pressure2Mapper.map(adc.analogRead(pressure_pin2)).asRaw();
+  voices[3].volume = pressure3Mapper.map(adc.analogRead(pressure_pin3)).asRaw();
 }
 
 
@@ -277,7 +287,7 @@ void updateControl() {
   }
 
 
-  voices[0].volume = mozziAnalogRead<8>(pressure_pin1);
+  voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
   for (uint8_t i = 0; i < N_VOICES; i++) voices[i].lpf.setCutoffFreqAndResonance(voices[i].cutoff, resonance);
 }
