@@ -11,9 +11,7 @@ different notes to be played simulteanously.
 
 
 TODO: 
- - pressure calib
- - tame volume when pressure on lpf?
- - cleanup (separate the voice class for god sake)
+ - maybe make BiPot more efficient by changing const values with templates
 */
 
 #include "MozziConfigValues.h"  // for named option values
