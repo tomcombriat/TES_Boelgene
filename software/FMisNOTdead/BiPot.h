@@ -41,26 +41,25 @@ private:
 
 class BiPotMultBoost {
 public:
-  BiPotMultBoost(uint8_t _nBitsIn = 16, uint8_t _nBitsMult = 16, uint8_t multiplier=1)
-    : nBitsIn(_nBitsIn), nBitsMult(_nBitsMult), multiplier(multiplier) {};
+  BiPotMultBoost(uint8_t _nBitsIn = 16, uint8_t _nBitsMult = 16, uint8_t multiplier = 1)
+    : nBitsIn(_nBitsIn), nBitsMult(_nBitsMult), multiplier(multiplier){};
 
   void setValue(uint16_t val) {
-    if (val < (1<<(nBitsIn-1))) {
-      value = val /* << (16-nBitsIn-1)*/;
+    if (val < (1 << (nBitsIn - 1))) {
+      value = val << 1;
       mult = false;
     } else {
-        value = (val - (1<<(nBitsIn-1)));
-        mult = true;
-      }
+      value = (val - (1 << (nBitsIn - 1))) << 1;
+      mult = true;
+    }
   };
 
 
   uint16_t getValue(uint16_t input) {
-    if (!mult) return value << (16 - nBitsIn + 1);
+    if (!mult) return value << (16 - nBitsIn);
     // else return uint16_t((uint32_t(input) * value) >> 16);
-    else 
-    {
-      uint32_t ret = (uint32_t(input) * value * multiplier) >> (nBitsIn + nBitsMult - 17);
+    else {
+      uint32_t ret = (uint32_t(input) * value * multiplier) >> (nBitsIn + nBitsMult - 16);
       if (ret > 65535) return 65535;
       else return uint16_t(ret);
       //return uint16_t((uint32_t(input) * value) >> (nBitsIn + nBitsMult - 16));
@@ -68,7 +67,7 @@ public:
   };
 
   uint16_t getValueRaw() {
-    return value << 1 ; // shift to accourt that we divided by two in the previous step (setValue)
+    return value;
   };
 
   bool getMult() {
@@ -79,7 +78,6 @@ private:
   uint16_t value;
   bool mult = false;
   const uint8_t nBitsIn, nBitsMult, multiplier;
-  
 };
 
 
