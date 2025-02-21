@@ -73,7 +73,7 @@ unsigned long last_update_time = 0;
 
 
 // Maybe boost back to 1 once pressure properly calibrated?
-BiPotMultBoost cutoffPot(10, 8, 2);
+BiPotMultBoost cutoffPot(10, 8, 1);
 BiPotMultBoost mod1Pot(10, 8, 1);
 BiPotMultBoost mod1RatioPot(10);
 
@@ -224,7 +224,12 @@ void loop1() {
     for (uint8_t i = 0; i < N_VOICES; i++) voices[i].setMod2(mod2Pot.getValue(voices[i].volume));
 
 
-    //// MODULATION RATIOS
+      //// MODULATION RATIOS
+
+#if (FM_RATIO_MOD == FREE)
+    //mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw());
+    mod1Ratio = mod1Ratio.fromRaw(adc.analogRead(pot2));
+#else
     mod1RatioPot.setValue(adc.analogRead(pot2));
     if (mod1RatioPot.getMult()) mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw());
     else {  // constrained ratio
@@ -238,9 +243,16 @@ void loop1() {
         }
       }
     }
+#endif
 
+
+#if (FM_RATIO_MOD == FREE)
+    //mod2Ratio.fromRaw(mod2RatioPot.getValueRaw());
+    mod2Ratio = mod2Ratio.fromRaw(adc.analogRead(pot4));
+#else
     mod2RatioPot.setValue(adc.analogRead(pot4));
     if (mod2RatioPot.getMult()) mod2Ratio = mod2Ratio.fromRaw(mod2RatioPot.getValueRaw());
+
     else {  // constrained ratio
       mod2Ratio = UFix<2, 1>(mod2Ratio.fromRaw(mod2RatioPot.getValueRaw()));
       if (prevMod2Ratio != mod2Ratio) {
@@ -252,6 +264,7 @@ void loop1() {
         }
       }
     }
+#endif
   }
 
   // Volume checking for additionnal buttons (here because async is not available)
