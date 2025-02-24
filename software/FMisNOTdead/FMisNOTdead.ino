@@ -324,5 +324,5 @@ AudioOutput updateAudio() {
       sample += sub_sample;
     }
   }
-  return MonoOutput::fromNBit(17, sample).clip();
+  return MonoOutput::fromNBit(18, sample).clip();
 }
