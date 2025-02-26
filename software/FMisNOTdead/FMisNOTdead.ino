@@ -37,6 +37,10 @@ TODO:
 #include <MCP3XXX.h>
 #include "config.h"
 
+#if (defined LUT_FM_RATIO_FULL || defined LUT_FM_RATIO_HALF)
+#include "modRatioLUT.hpp"
+#endif
+
 
 FixMathMapperFull<UFix<12, 0>, UFix<7, 9>> mapper;
 FixMathMapperFull<UFix<12, 0>, UFix<8, 0>, true> pressure0Mapper;
@@ -226,9 +230,16 @@ void loop1() {
 
       //// MODULATION RATIOS
 
-#if (FM_RATIO_MOD == FREE)
-    //mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw());
-    mod1Ratio = mod1Ratio.fromRaw(adc.analogRead(pot2));
+#ifdef FM_RATIO_MOD_FREE
+    int16_t reading = adc.analogRead(pot2);
+#if defined LUT_FM_RATIO_FULL
+    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> 0)));  // hope the compilo will optimize that, that's fairly easy. LUT can be shifted down to tame the effect
+#elif defined LUT_FM_RATIO_HALF
+    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> 1)));
+#else
+    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading));
+#endif
+
 #else
     mod1RatioPot.setValue(adc.analogRead(pot2));
     if (mod1RatioPot.getMult()) mod1Ratio = mod1Ratio.fromRaw(mod1RatioPot.getValueRaw());
@@ -246,9 +257,18 @@ void loop1() {
 #endif
 
 
-#if (FM_RATIO_MOD == FREE)
-    //mod2Ratio.fromRaw(mod2RatioPot.getValueRaw());
-    mod2Ratio = mod2Ratio.fromRaw(adc.analogRead(pot4));
+
+
+#ifdef FM_RATIO_MOD_FREE
+    reading = adc.analogRead(pot4);
+#if defined LUT_FM_RATIO_FULL
+    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> 0)));  // hope the compilo will optimize the division, that's fairly easy
+#elif defined LUT_FM_RATIO_HALF
+    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> 1)));
+#else
+    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading));
+#endif
+
 #else
     mod2RatioPot.setValue(adc.analogRead(pot4));
     if (mod2RatioPot.getMult()) mod2Ratio = mod2Ratio.fromRaw(mod2RatioPot.getValueRaw());

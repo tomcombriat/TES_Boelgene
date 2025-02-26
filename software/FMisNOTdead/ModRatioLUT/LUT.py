@@ -21,10 +21,10 @@ plt.show()
 #### For full value
 
 x = np.arange(1024)
-y = np.zeros(1024)
+y1 = np.zeros(1024)
 for i in range(len(x)):
-    y[i] = x[i] - LUT[i%256]
-plt.plot(x,y)
+    y1[i] = x[i] - LUT[i%256]
+plt.plot(x,y1)
 plt.show()
 
 
@@ -33,8 +33,9 @@ plt.show()
 
 y2 = np.zeros(1024)
 for i in range(len(x)):
-    y[i] = x[i] - LUT[(2*i)%256]/2
-plt.plot(x,y)
+    y2[i] = x[i] - LUT[(2*i)%256]/2
+plt.plot(x,y1)
+plt.plot(x,y2)
 plt.show()
 
 
