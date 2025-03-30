@@ -233,9 +233,9 @@ void loop1() {
 #ifdef FM_RATIO_MOD_FREE
     int16_t reading = adc.analogRead(pot2);
 #if defined LUT_FM_RATIO_FULL
-    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> 0)));  // hope the compilo will optimize that, that's fairly easy. LUT can be shifted down to tame the effect
+    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> LUT_FM_RATIO_TAME)));  // hope the compilo will optimize that, that's fairly easy. LUT can be shifted down to tame the effect
 #elif defined LUT_FM_RATIO_HALF
-    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> 1)));
+    mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> (1 + LUT_FM_RATIO_TAME))));
 #else
     mod1Ratio = mod1Ratio.fromRaw(uint16_t(reading));
 #endif
@@ -262,9 +262,9 @@ void loop1() {
 #ifdef FM_RATIO_MOD_FREE
     reading = adc.analogRead(pot4);
 #if defined LUT_FM_RATIO_FULL
-    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> 0)));  // hope the compilo will optimize the division, that's fairly easy
+    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[reading % 256] >> LUT_FM_RATIO_TAME)));  // hope the compilo will optimize the division, that's fairly easy
 #elif defined LUT_FM_RATIO_HALF
-    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> 1)));
+    mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading - (RATIO_LUT[(reading << 1) % 256] >> (1 + LUT_FM_RATIO_TAME))));
 #else
     mod2Ratio = mod2Ratio.fromRaw(uint16_t(reading));
 #endif
