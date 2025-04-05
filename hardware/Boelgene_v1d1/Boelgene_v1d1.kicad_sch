@@ -1209,7 +1209,6 @@
     )
   )
 
-
   (junction (at 143.002 66.294) (diameter 0) (color 0 0 0 0)
     (uuid 0a67434d-499f-42d4-ae8d-36e879520638)
   )
@@ -2282,7 +2281,7 @@
     (uuid 55d1c3b5-14d5-42c0-8335-6c6a74763122)
     (property "Reference" "U1" (id 0) (at 111.76 50.0212 0))
     (property "Value" "Pico" (id 1) (at 111.76 52.5581 0))
-    (property "Footprint" "Pico:RPi_Pico_SMD_TH" (id 2) (at 111.76 80.264 90)
+    (property "Footprint" "Pico:RPi_Pico_TH" (id 2) (at 111.76 80.264 90)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "" (id 3) (at 111.76 80.264 0)
@@ -3679,7 +3678,7 @@
       (reference "TP43") (unit 1) (value "out_PWM") (footprint "TestPoint:TestPoint_THTPad_2.0x2.0mm_Drill1.0mm")
     )
     (path "/55d1c3b5-14d5-42c0-8335-6c6a74763122"
-      (reference "U1") (unit 1) (value "Pico") (footprint "Pico:RPi_Pico_SMD_TH")
+      (reference "U1") (unit 1) (value "Pico") (footprint "Pico:RPi_Pico_TH")
     )
     (path "/d8decf76-7406-4b5d-a4e7-b9a6ec9da4e3"
       (reference "U2") (unit 1) (value "MCP3008") (footprint "Package_DIP:DIP-16_W7.62mm")

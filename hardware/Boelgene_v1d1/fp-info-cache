@@ -1,4 +1,4 @@
-20922172818550337
+20923872289353170
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -76501,6 +76501,13 @@ Through hole straight pin header, 2x20, 2.54mm pitch, double rows
 Through hole pin header THT 2x20 2.54mm double row
 0
 86
+43
+Pico
+RPi_Pico_TH
+Through hole straight pin header, 2x20, 2.54mm pitch, double rows
+Through hole pin header THT 2x20 2.54mm double row
+0
+43
 43
 Potentiometer_SMD
 Potentiometer_ACP_CA6-VSMD_Vertical
