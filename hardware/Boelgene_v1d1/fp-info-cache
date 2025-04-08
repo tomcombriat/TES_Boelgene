@@ -1,4 +1,4 @@
-20923872289353170
+20940772838970978
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -58519,6 +58519,55 @@ Yellow 5381 Series LED
 0
 2
 2
+MCU_RaspberryPi_and_Boards
+Crystal_SMD_HC49-US
+SMD Crystal HC-49-SD http://cdn-reichelt.de/documents/datenblatt/B400/xxx-HC49-SMD.pdf, 11.4x4.7mm^2 package
+SMD SMT crystal
+0
+2
+2
+MCU_RaspberryPi_and_Boards
+RP2040-QFN-56
+QFN, 56 Pin (http://www.cypress.com/file/416486/download#page=40), generated with kicad-footprint-generator ipc_dfn_qfn_generator.py
+QFN DFN_QFN
+0
+70
+57
+MCU_RaspberryPi_and_Boards
+RPi_Pico_SMD_TH
+Through hole straight pin header, 2x20, 2.54mm pitch, double rows
+Through hole pin header THT 2x20 2.54mm double row
+0
+86
+43
+MCU_RaspberryPi_and_Boards
+RPi_Pico_TH
+Through hole straight pin header, 2x20, 2.54mm pitch, double rows
+Through hole pin header THT 2x20 2.54mm double row
+0
+43
+43
+MIDI_DIN5
+DS-5 MIDI
+
+
+0
+7
+6
+MIDI_DIN5
+DS-5 MIDI_Wide
+
+
+0
+7
+6
+MIDI_TRS
+PJ-320B
+
+
+0
+3
+3
 Mechanical
 Drill_0.5mm
 0.5mm drill hole for mouse bites
@@ -87534,6 +87583,27 @@ varistor
 0
 2
 2
+brak
+brak_logo
+
+
+0
+0
+0
+kicad_TES_logo
+owl_7x10
+
+
+0
+0
+0
+kicad_TES_logo
+owl_50x70
+
+
+0
+0
+0
 teensy
 Teensy1.0
 11

@@ -1,3 +1,4 @@
 (fp_lib_table
   (lib (name "Pico")(type "KiCad")(uri "/home/tom/TES/TES_Boelgene/hardware/kicad_components/RP-Pico Libraries/MCU_RaspberryPi_and_Boards.pretty")(options "")(descr ""))
+  (lib (name "brak")(type "KiCad")(uri "/home/tom/TES/TES_Boelgene/hardware/kicad_components/brak")(options "")(descr ""))
 )
