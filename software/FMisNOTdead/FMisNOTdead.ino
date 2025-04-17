@@ -18,7 +18,7 @@ TODO:
 #define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
 #define MOZZI_I2S_FORMAT MOZZI_I2S_FORMAT_LSBJ
 #define MOZZI_AUDIO_CHANNELS 1
-#define MOZZI_CONTROL_RATE 256  // Hz, powers of 2 are most reliable
+#define MOZZI_CONTROL_RATE 1024  // Hz, powers of 2 are most reliable
 
 #include <Button.h>  // from TES_eSax-lib
 #include <Mozzi.h>
@@ -75,6 +75,11 @@ UFix<2, 8> mod2Ratio, prevMod2Ratio;
 
 unsigned long last_update_time = 0;
 
+/// LED false Osc
+uint8_t led_intensity = 0;
+Oscil<COS2048_NUM_CELLS, MOZZI_CONTROL_RATE> kCosLed1(COS2048_DATA);
+Oscil<COS2048_NUM_CELLS, MOZZI_CONTROL_RATE> kCosLed2(COS2048_DATA);
+
 
 // Maybe boost back to 1 once pressure properly calibrated?
 BiPotMultBoost cutoffPot(10, 8, 1);
@@ -89,10 +94,10 @@ BiPotMultBoost mod2RatioPot(10);
 #define OSC_NUM_CELLS 2048
 class voice {
 public:  // no offense, most things in public, I know what I am doing
-  Oscil<OSC_NUM_CELLS, AUDIO_RATE> aCos;
-  Oscil<OSC_NUM_CELLS, AUDIO_RATE> aMod1;
-  Oscil<OSC_NUM_CELLS, AUDIO_RATE> aMod2;
-  Oscil<OSC_NUM_CELLS, AUDIO_RATE> aSub;
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod1;
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;
   //AudioDelayFeedback<2048> aDel;
   SFix<4, 0> transpose;
 
@@ -120,6 +125,10 @@ public:  // no offense, most things in public, I know what I am doing
   };
   uint16_t getMod2() {
     return modulation_amount2;
+  };
+
+  UFix<16, 16> getFreq() {
+    return freq;
   };
 
 
@@ -178,7 +187,8 @@ void setup() {
   pinMode(octm_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(octp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(led_pin, OUTPUT);
-  digitalWrite(led_pin, HIGH);
+  //digitalWrite(led_pin, HIGH);
+  analogWriteRange(255);
 }
 
 void setup1() {
@@ -296,6 +306,7 @@ void loop1() {
 
 void updateControl() {
 
+
   /* Ref min and max */
   if (!digitalRead(refm_pin)) {
     pitch_pot_min = mozziAnalogRead<12>(pitch_pin);
@@ -321,6 +332,13 @@ void updateControl() {
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
   for (uint8_t i = 0; i < N_VOICES; i++) voices[i].lpf.setCutoffFreqAndResonance(voices[i].cutoff, resonance);
+
+
+  int32_t freqLed1 = abs((mod1Ratio.sL<1>() - UFix<3, 0>(mod1Ratio.sL<1>() + UFix<0, 1>(0.5))).sL<7>().asInt());
+  int32_t freqLed2 = abs((mod2Ratio.sL<1>() - UFix<3, 0>(mod2Ratio.sL<1>() + UFix<0, 1>(0.5))).sL<7>().asInt());
+  kCosLed1.setFreq(UFix<14, 2>().fromRaw(freqLed1 << 2));
+  kCosLed2.setFreq(UFix<14, 2>().fromRaw(freqLed2 << 2));
+  analogWrite(led_pin, (((int16_t(kCosLed1.next()) + 127)) + ((int16_t(kCosLed2.next())) >> 1) + 63)>>1); // ideally two leds… (use the octave indicators in future?)
 }
 
 AudioOutput updateAudio() {
