@@ -1,0 +1,19 @@
+#ifndef _CONFIG_
+#define _CONFIG_
+
+#define POLYPHONY 4
+
+#define PRESSURE0_MIN 22
+#define PRESSURE0_MAX 2380
+
+#define PRESSURE1_MIN 0
+#define PRESSURE1_MAX 640
+
+#define PRESSURE2_MIN 0
+#define PRESSURE2_MAX 635
+
+#define PRESSURE3_MIN 0
+#define PRESSURE3_MAX 750
+
+
+#endif
