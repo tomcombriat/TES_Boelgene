@@ -49,6 +49,10 @@ FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure1Mapper;
 FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure2Mapper;
 FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure3Mapper;
 
+FixMathMapperFull<UFix<12, 0>, UFix<16, 0>, true> bp1Mapper;
+FixMathMapperFull<UFix<12, 0>, UFix<16, 0>, true> bp2Mapper;
+
+
 // ADC
 MCP3XXX_<10, 8, 300000> adc;
 
@@ -79,6 +83,8 @@ uint8_t led_intensity = 0;
 
 // Maybe boost back to 1 once pressure properly calibrated?
 BiPotMultBoost cutoffPot(10, 8, 1);
+BiPotMultBoost cutoff1Pot(12, 8, 1);
+BiPotMultBoost cutoff2Pot(12, 8, 1);
 
 
 #define N_VOICES 4
@@ -94,15 +100,16 @@ public:  // no offense, most things in public, I know what I am doing
 
   uint8_t volume;
   //LowPassFilter16 lpf;
-  ResonantFilter<BANDPASS, uint16_t> bpf1;
-  ResonantFilter<BANDPASS, uint16_t> bpf2;
+  ResonantFilter<BANDPASS, uint16_t> bpf1a;
+  ResonantFilter<BANDPASS, uint16_t> bpf2a;
+  ResonantFilter<BANDPASS, uint16_t> bpf1b;
+  ResonantFilter<BANDPASS, uint16_t> bpf2b;
   uint16_t cutoff1, cutoff2;
 
   UFix<16, 16> freq;
 
 
 private:
-
 };
 
 
@@ -110,11 +117,10 @@ voice voices[N_VOICES];
 
 void setup() {
 
-Serial.begin(115200);
+  Serial.begin(115200);
   // Voices initialization
 
-  for (int i=0;i<POLYPHONY;i++)
-  {
+  for (int i = 0; i < POLYPHONY; i++) {
     aSaw154[i].setTable(SAW_MAX_154_AT_16384_512_DATA);
     aSaw182[i].setTable(SAW_MAX_182_AT_16384_512_DATA);
     aSaw221[i].setTable(SAW_MAX_221_AT_16384_512_DATA);
@@ -135,25 +141,14 @@ Serial.begin(115200);
     voices[i].aOsc.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
   }
 
-  
+
   voices[0].transpose = 0;
   voices[1].transpose = 4;
   voices[2].transpose = 3;
   voices[3].transpose = 7;
 
 
-//// TESTS
-voices[0].bpf1.setCutoffFreqAndResonance(9344, resonance);
-voices[0].bpf2.setCutoffFreqAndResonance(17856, resonance);
 
-voices[1].bpf1.setCutoffFreqAndResonance(3136, resonance);
-voices[1].bpf2.setCutoffFreqAndResonance(25600, resonance);
-
-voices[2].bpf1.setCutoffFreqAndResonance(3840, resonance);
-voices[2].bpf2.setCutoffFreqAndResonance(9300, resonance);
-
-voices[3].bpf1.setCutoffFreqAndResonance(0, resonance);
-voices[3].bpf2.setCutoffFreqAndResonance(0, resonance);
 
   pinMode(pressure_pin0, INPUT);
   pinMode(pitch_pin, INPUT);
@@ -169,6 +164,9 @@ voices[3].bpf2.setCutoffFreqAndResonance(0, resonance);
   pressure1Mapper.setBounds(PRESSURE1_MIN, PRESSURE1_MAX, 0, 255);
   pressure2Mapper.setBounds(PRESSURE2_MIN, PRESSURE2_MAX, 0, 255);
   pressure3Mapper.setBounds(PRESSURE3_MIN, PRESSURE3_MAX, 0, 255);
+
+  bp1Mapper.setBounds(0, 4095, 3136, 9344);
+  bp2Mapper.setBounds(0, 4095, 9344, 25600);
 
 
 
@@ -215,17 +213,20 @@ void loop1() {
     last_update_time = millis();
 
     // LPF parameters checking
-    resonance = adc.analogRead(pot1) << 6;
+    resonance = adc.analogRead(pot2) << 6;
 
     cutoffPot.setValue(adc.analogRead(pot0));
     //cutoff2 = adc.analogRead(pot2);
     //for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume);
 
     for (uint8_t i = 0; i < N_VOICES; i++) {
-      voices[i].cutoff1 = adc.analogRead(pot0) << 6;
-      voices[i].cutoff2 = adc.analogRead(pot2) << 6;
+      /* voices[i].cutoff1 = bp1Mapper.map(adc.analogRead(pot0) << 2).asRaw();
+      voices[i].cutoff2 = bp2Mapper.map(adc.analogRead(pot1) << 2).asRaw();*/
+      //cutoff1Pot.setValue(voic)
     }
-
+    //cutoff1Pot.setValue(bp1Mapper.map(adc.analogRead(pot0) << 2).asRaw());
+    cutoff1Pot.setValue(adc.analogRead(pot0) << 2);
+    cutoff2Pot.setValue(adc.analogRead(pot1) << 2);
 
     // Volume checking for additionnal buttons (here because async is not available)
     voices[1].volume = pressure1Mapper.map(adc.analogRead(pressure_pin1)).asRaw();
@@ -254,9 +255,8 @@ void updateControl() {
 
 
   for (uint8_t i = 0; i < N_VOICES; i++) {
-    //voices[i].freq = mtof(midi_base_note + voices[i].transpose);
-    voices[i].freq = mtof(midi_base_note);
-
+    voices[i].freq = mtof(midi_base_note + voices[i].transpose);
+    //voices[i].freq = mtof(midi_base_note);
     voices[i].aOsc.setFreq(voices[i].freq);
   }
 
@@ -264,30 +264,34 @@ void updateControl() {
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
   for (uint8_t i = 0; i < N_VOICES; i++) {
-    //voices[i].bpf1.setCutoffFreqAndResonance(voices[i].cutoff1, resonance);
-   // voices[i].bpf2.setCutoffFreqAndResonance(voices[i].cutoff2, resonance);
-  }
+    /*
+    voices[i].bpf1a.setCutoffFreqAndResonance(voices[i].cutoff1, resonance);
+    voices[i].bpf2a.setCutoffFreqAndResonance(voices[i].cutoff2, resonance);
+    voices[i].bpf1b.setCutoffFreqAndResonance(voices[i].cutoff1, resonance);
+    voices[i].bpf2b.setCutoffFreqAndResonance(voices[i].cutoff2, resonance);*/
 
+    voices[i].bpf1a.setCutoffFreqAndResonance(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
+    voices[i].bpf1b.setCutoffFreqAndResonance(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
+    voices[i].bpf2a.setCutoffFreqAndResonance(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
+    voices[i].bpf2b.setCutoffFreqAndResonance(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
+  }
 }
 
 AudioOutput updateAudio() {
-  int32_t sample = 0;
 
-    //sample = random(-127, 127);
-     sample = voices[0].aOsc.next()+random(-127, 127);
-     int32_t bpfed=0;
+  int32_t bpfed = 0;
   for (uint8_t i = 0; i < N_VOICES; i++) {
     /*
       int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].getMod1() * voices[i].aMod1.phMod((voices[i].getMod2() * voices[i].aMod2.next()) >> 7)) >> 4);
       sub_sample = voices[i].lpf.next(sub_sample * voices[i].volume);
       sample += sub_sample;*/
-
-      int32_t sub_sample  =voices[i].volume*(voices[i].bpf1.next(sample)+ voices[i].bpf2.next(sample));
-      bpfed += sub_sample >> 8;
+    int16_t sample = voices[i].aOsc.next() /*+ (rand(-127, 127) >> 0)*/;
+    int32_t sub_sample = voices[i].volume * (voices[i].bpf1b.next(voices[i].bpf1a.next(sample)) + voices[i].bpf2b.next(voices[i].bpf2a.next(sample)));
+    bpfed += sub_sample >> 8;
   }
 
 
   //int32_t bpfed1 = voices[0].bpf1.next(sample) + voices[0].bpf2.next(sample);
 
-  return MonoOutput::fromNBit(10, bpfed).clip();
+  return MonoOutput::fromNBit(9, bpfed).clip();
 }
