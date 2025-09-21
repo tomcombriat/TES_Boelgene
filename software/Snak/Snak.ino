@@ -24,8 +24,9 @@ TODO:
 #include <Mozzi.h>
 #include <mozzi_midi.h>
 #include <Oscil.h>
-#include <tables/saw2048_int8.h>
+//#include <tables/saw2048_int8.h>
 //#include <tables/triangle2048_int8.h>
+#include <tables/cos512_int8.h>
 #include <tables/cos2048_int8.h>
 #include <ResonantFilter.h>
 #include <FixMathMapper.h>
@@ -33,10 +34,12 @@ TODO:
 #include <MetaOscil.h>
 #include "Oscils.h"
 #include <mozzi_rand.h>
+#include <WaveFolder.h>
 
 #include <SPI.h>
 #include <MCP3XXX.h>
 #include "config.h"
+#include "param_struct.h"
 
 #if (defined LUT_FM_RATIO_FULL || defined LUT_FM_RATIO_HALF)
 #include "modRatioLUT.hpp"
@@ -52,6 +55,7 @@ FixMathMapperFull<UFix<10, 0>, UFix<8, 0>, true> pressure3Mapper;
 FixMathMapperFull<UFix<12, 0>, UFix<16, 0>, true> bp1Mapper;
 FixMathMapperFull<UFix<12, 0>, UFix<16, 0>, true> bp2Mapper;
 
+WaveFolder<int32_t> wf;
 
 // ADC
 MCP3XXX_<10, 8, 300000> adc;
@@ -70,7 +74,8 @@ Button octp(octp_pin, false);
 int octave = 0;
 UFix<7, 9> midi_base_note;
 UFix<12, 0> pitch_pot_min = 433, pitch_pot_max = 3811;
-uint16_t resonance = 65535;  //, cutoff = 0;
+
+Params params;
 
 
 
@@ -82,7 +87,7 @@ uint8_t led_intensity = 0;
 
 
 // Maybe boost back to 1 once pressure properly calibrated?
-BiPotMultBoost cutoffPot(10, 8, 1);
+
 BiPotMultBoost cutoff1Pot(12, 8, 1);
 BiPotMultBoost cutoff2Pot(12, 8, 1);
 
@@ -91,12 +96,25 @@ BiPotMultBoost cutoff2Pot(12, 8, 1);
 #define OSC_NUM_CELLS 512
 
 
-class voice {
-public:  // no offense, most things in public, I know what I am doing
-         /* Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
+
+
+
+
+class Voice {
+public:
+  Voice(){};
+  Voice(Params *_params) {
+    params = _params;
+  };
+  void setParams(Params *_params) {
+    params = _params;
+  };
+
+  // no offense, most things in public, I know what I am doing
+  /* Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
   Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod1;
-  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;
-  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;*/
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;*/
+  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;
   SFix<4, 0> transpose;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSaw;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 21> aSq;
@@ -108,28 +126,24 @@ public:  // no offense, most things in public, I know what I am doing
   ResonantFilter<BANDPASS, uint16_t> bpf1b;
   ResonantFilter<BANDPASS, uint16_t> bpf2b;
 
-/*
-  void setFreq(UFix<16, 16> _freq) {
-    aSaw.setFreq(_freq);
-  }*/
 
   void setBaseNote(UFix<7, 9> base_note) {
     freq = mtof(base_note + transpose);
     aSaw.setFreq(freq);
-    aSq.setFreq(freq.sR<1>());
-
+    aSq.setFreq(freq.sR<0>());
+    aSub.setFreq(freq.sR<1>());
   }
 
   void setCutoff1(uint16_t _cutoff1) {
     cutoff1 = _cutoff1;
-    bpf1a.setCutoffFreqAndResonance(cutoff1, resonance);
-    bpf1b.setCutoffFreqAndResonance(cutoff1, resonance);
+    bpf1a.setCutoffFreqAndResonance(cutoff1, params->resonance);
+    bpf1b.setCutoffFreqAndResonance(cutoff1, params->resonance);
   }
 
   void setCutoff2(uint16_t _cutoff2) {
     cutoff2 = _cutoff2;
-    bpf2a.setCutoffFreqAndResonance(cutoff2, resonance);
-    bpf2b.setCutoffFreqAndResonance(cutoff2, resonance);
+    bpf2a.setCutoffFreqAndResonance(cutoff2, params->resonance);
+    bpf2b.setCutoffFreqAndResonance(cutoff2, params->resonance);
   }
 
   void setResonance(uint16_t _resonance) {
@@ -138,8 +152,9 @@ public:  // no offense, most things in public, I know what I am doing
 
 
   int32_t next() {
-    int16_t sample = aSaw.next()+aSq.next();
-    int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));
+    int32_t sample = (params->osc_mix * aSaw.next() + (255 - params->osc_mix) * aSq.next()) >> 8;       // 9bits
+    sample += (aSub.next() * params->sub_level) >> 7;                                                   //10bits
+    int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));  //18
     return bpfed_sample;
   }
 
@@ -147,10 +162,11 @@ private:
 
   UFix<16, 16> freq;
   uint16_t cutoff1, cutoff2, resonance;
+  Params *params = nullptr;
 };
 
 
-voice voices[N_VOICES];
+Voice voices[N_VOICES];
 
 void setup() {
 
@@ -202,6 +218,9 @@ void setup() {
                             &aSq282[i], &aSq356[i], &aSq431[i], &aSq546[i], &aSq630[i], &aSq744[i], &aSq910[i], &aSq1170[i], &aSq1638[i], &aSq2730[i], &aSq8192[i]);
     voices[i].aSq.setCutoffFreqs(75 * 2, 81 * 2, 88 * 2, 96 * 2, 106 * 2, 118 * 2, 134 * 2, 154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2,
                                  546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
+    voices[i].aSq.setPhase(256);
+    voices[i].aSub.setTable(COS512_DATA);
+    voices[i].setParams(&params);
   }
 
 
@@ -210,7 +229,7 @@ void setup() {
   voices[2].transpose = 3;
   voices[3].transpose = 7;
 
-
+  wf.setLimits(-131071, 131071);
 
 
   pinMode(pressure_pin0, INPUT);
@@ -229,7 +248,8 @@ void setup() {
   pressure3Mapper.setBounds(PRESSURE3_MIN, PRESSURE3_MAX, 0, 255);
 
   bp1Mapper.setBounds(0, 4095, 3136, 9344);
-  bp2Mapper.setBounds(0, 4095, 9344, 25600);
+  //bp2Mapper.setBounds(0, 4095, 9344, 25600);
+  bp2Mapper.setBounds(0, 4095,25600, 9344);
 
 
 
@@ -276,15 +296,12 @@ void loop1() {
   if (last_update_time + 2 < millis()) {
     last_update_time = millis();
 
+    params.osc_mix = adc.analogRead(pot3) >> 2;
+    params.sub_level = adc.analogRead(pot4) >> 2;
+
     // LPF parameters checking
-    resonance = adc.analogRead(pot2) << 6;
+    params.resonance = adc.analogRead(pot2) << 6;
 
-
-
-    for (uint8_t i = 0; i < N_VOICES; i++) {
-      voices[i].setResonance(resonance);
-    }
-    //cutoff1Pot.setValue(bp1Mapper.map(adc.analogRead(pot0) << 2).asRaw());
     cutoff1Pot.setValue(adc.analogRead(pot0) << 2);
     cutoff2Pot.setValue(adc.analogRead(pot1) << 2);
 
@@ -313,9 +330,6 @@ void updateControl() {
   midi_base_note = mapper.map(mozziAnalogRead<12>(pitch_pin));
   midi_base_note = midi_base_note + UFixAuto<12>() * SFix<3, 0>(octave);
 
-
-
-
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
   for (uint8_t i = 0; i < N_VOICES; i++) {
@@ -333,7 +347,6 @@ AudioOutput updateAudio() {
   }
 
 
-  //int32_t bpfed1 = voices[0].bpf1.next(sample) + voices[0].bpf2.next(sample);
-
-  return MonoOutput::fromNBit(18, out).clip();
+return MonoOutput::fromNBit(18, out).clip();
+  //return MonoOutput::fromNBit(18, wf.next(out));  //.clip();
 }
