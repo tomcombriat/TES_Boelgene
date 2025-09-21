@@ -98,7 +98,8 @@ public:  // no offense, most things in public, I know what I am doing
   Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;
   Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;*/
   SFix<4, 0> transpose;
-  MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aOsc;
+  MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSaw;
+  MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 21> aSq;
 
   uint8_t volume;
   //LowPassFilter16 lpf;
@@ -107,14 +108,16 @@ public:  // no offense, most things in public, I know what I am doing
   ResonantFilter<BANDPASS, uint16_t> bpf1b;
   ResonantFilter<BANDPASS, uint16_t> bpf2b;
 
-
+/*
   void setFreq(UFix<16, 16> _freq) {
-    aOsc.setFreq(_freq);
-  }
+    aSaw.setFreq(_freq);
+  }*/
 
   void setBaseNote(UFix<7, 9> base_note) {
     freq = mtof(base_note + transpose);
-    setFreq(freq);
+    aSaw.setFreq(freq);
+    aSq.setFreq(freq.sR<1>());
+
   }
 
   void setCutoff1(uint16_t _cutoff1) {
@@ -135,7 +138,7 @@ public:  // no offense, most things in public, I know what I am doing
 
 
   int32_t next() {
-    int16_t sample = aOsc.next();
+    int16_t sample = aSaw.next()+aSq.next();
     int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));
     return bpfed_sample;
   }
@@ -169,10 +172,36 @@ void setup() {
     aSaw1638[i].setTable(SAW_MAX_1638_AT_16384_512_DATA);
     aSaw2730[i].setTable(SAW_MAX_2730_AT_16384_512_DATA);
     aSaw8192[i].setTable(SAW_MAX_8192_AT_16384_512_DATA);
+
+    aSq75[i].setTable(SQUARE_MAX_75_AT_16384_512_DATA);
+    aSq81[i].setTable(SQUARE_MAX_81_AT_16384_512_DATA);
+    aSq88[i].setTable(SQUARE_MAX_88_AT_16384_512_DATA);
+    aSq96[i].setTable(SQUARE_MAX_96_AT_16384_512_DATA);
+    aSq106[i].setTable(SQUARE_MAX_106_AT_16384_512_DATA);
+    aSq118[i].setTable(SQUARE_MAX_118_AT_16384_512_DATA);
+    aSq134[i].setTable(SQUARE_MAX_134_AT_16384_512_DATA);
+    aSq154[i].setTable(SQUARE_MAX_154_AT_16384_512_DATA);
+    aSq182[i].setTable(SQUARE_MAX_182_AT_16384_512_DATA);
+    aSq221[i].setTable(SQUARE_MAX_221_AT_16384_512_DATA);
+    aSq282[i].setTable(SQUARE_MAX_282_AT_16384_512_DATA);
+    aSq356[i].setTable(SQUARE_MAX_356_AT_16384_512_DATA);
+    aSq431[i].setTable(SQUARE_MAX_431_AT_16384_512_DATA);
+    aSq546[i].setTable(SQUARE_MAX_546_AT_16384_512_DATA);
+    aSq630[i].setTable(SQUARE_MAX_630_AT_16384_512_DATA);
+    aSq744[i].setTable(SQUARE_MAX_744_AT_16384_512_DATA);
+    aSq910[i].setTable(SQUARE_MAX_910_AT_16384_512_DATA);
+    aSq1170[i].setTable(SQUARE_MAX_1170_AT_16384_512_DATA);
+    aSq1638[i].setTable(SQUARE_MAX_1638_AT_16384_512_DATA);
+    aSq2730[i].setTable(SQUARE_MAX_2730_AT_16384_512_DATA);
+    aSq8192[i].setTable(SQUARE_MAX_8192_AT_16384_512_DATA);
   }
   for (int i = 0; i < N_VOICES; i++) {
-    voices[i].aOsc.setOscils(&aSaw154[i], &aSaw182[i], &aSaw221[i], &aSaw282[i], &aSaw356[i], &aSaw431[i], &aSaw546[i], &aSaw630[i], &aSaw744[i], &aSaw910[i], &aSaw1170[i], &aSaw1638[i], &aSaw2730[i], &aSaw8192[i]);
-    voices[i].aOsc.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
+    voices[i].aSaw.setOscils(&aSaw154[i], &aSaw182[i], &aSaw221[i], &aSaw282[i], &aSaw356[i], &aSaw431[i], &aSaw546[i], &aSaw630[i], &aSaw744[i], &aSaw910[i], &aSaw1170[i], &aSaw1638[i], &aSaw2730[i], &aSaw8192[i]);
+    voices[i].aSaw.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
+    voices[i].aSq.setOscils(&aSq75[i], &aSq81[i], &aSq88[i], &aSq96[i], &aSq106[i], &aSq118[i], &aSq134[i], &aSq154[i], &aSq182[i], &aSq221[i],
+                            &aSq282[i], &aSq356[i], &aSq431[i], &aSq546[i], &aSq630[i], &aSq744[i], &aSq910[i], &aSq1170[i], &aSq1638[i], &aSq2730[i], &aSq8192[i]);
+    voices[i].aSq.setCutoffFreqs(75 * 2, 81 * 2, 88 * 2, 96 * 2, 106 * 2, 118 * 2, 134 * 2, 154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2,
+                                 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
   }
 
 
@@ -306,5 +335,5 @@ AudioOutput updateAudio() {
 
   //int32_t bpfed1 = voices[0].bpf1.next(sample) + voices[0].bpf2.next(sample);
 
-  return MonoOutput::fromNBit(20, out).clip();
+  return MonoOutput::fromNBit(18, out).clip();
 }
