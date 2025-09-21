@@ -89,6 +89,8 @@ BiPotMultBoost cutoff2Pot(12, 8, 1);
 
 #define N_VOICES 4
 #define OSC_NUM_CELLS 512
+
+
 class voice {
 public:  // no offense, most things in public, I know what I am doing
          /* Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
@@ -104,12 +106,44 @@ public:  // no offense, most things in public, I know what I am doing
   ResonantFilter<BANDPASS, uint16_t> bpf2a;
   ResonantFilter<BANDPASS, uint16_t> bpf1b;
   ResonantFilter<BANDPASS, uint16_t> bpf2b;
-  uint16_t cutoff1, cutoff2;
 
-  UFix<16, 16> freq;
 
+  void setFreq(UFix<16, 16> _freq) {
+    aOsc.setFreq(_freq);
+  }
+
+  void setBaseNote(UFix<7, 9> base_note) {
+    freq = mtof(base_note + transpose);
+    setFreq(freq);
+  }
+
+  void setCutoff1(uint16_t _cutoff1) {
+    cutoff1 = _cutoff1;
+    bpf1a.setCutoffFreqAndResonance(cutoff1, resonance);
+    bpf1b.setCutoffFreqAndResonance(cutoff1, resonance);
+  }
+
+  void setCutoff2(uint16_t _cutoff2) {
+    cutoff2 = _cutoff2;
+    bpf2a.setCutoffFreqAndResonance(cutoff2, resonance);
+    bpf2b.setCutoffFreqAndResonance(cutoff2, resonance);
+  }
+
+  void setResonance(uint16_t _resonance) {
+    resonance = _resonance;
+  }  // to allow potential taming further down the road
+
+
+  int32_t next() {
+    int16_t sample = aOsc.next();
+    int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));
+    return bpfed_sample;
+  }
 
 private:
+
+  UFix<16, 16> freq;
+  uint16_t cutoff1, cutoff2, resonance;
 };
 
 
@@ -176,7 +210,8 @@ void setup() {
   pinMode(octm_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(octp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
   pinMode(led_pin, OUTPUT);
-  //digitalWrite(led_pin, HIGH);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
   analogWriteRange(255);
 }
 
@@ -215,14 +250,10 @@ void loop1() {
     // LPF parameters checking
     resonance = adc.analogRead(pot2) << 6;
 
-    cutoffPot.setValue(adc.analogRead(pot0));
-    //cutoff2 = adc.analogRead(pot2);
-    //for (uint8_t i = 0; i < N_VOICES; i++) voices[i].cutoff = cutoffPot.getValue(voices[i].volume);
+
 
     for (uint8_t i = 0; i < N_VOICES; i++) {
-      /* voices[i].cutoff1 = bp1Mapper.map(adc.analogRead(pot0) << 2).asRaw();
-      voices[i].cutoff2 = bp2Mapper.map(adc.analogRead(pot1) << 2).asRaw();*/
-      //cutoff1Pot.setValue(voic)
+      voices[i].setResonance(resonance);
     }
     //cutoff1Pot.setValue(bp1Mapper.map(adc.analogRead(pot0) << 2).asRaw());
     cutoff1Pot.setValue(adc.analogRead(pot0) << 2);
@@ -254,44 +285,26 @@ void updateControl() {
   midi_base_note = midi_base_note + UFixAuto<12>() * SFix<3, 0>(octave);
 
 
-  for (uint8_t i = 0; i < N_VOICES; i++) {
-    voices[i].freq = mtof(midi_base_note + voices[i].transpose);
-    //voices[i].freq = mtof(midi_base_note);
-    voices[i].aOsc.setFreq(voices[i].freq);
-  }
 
 
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
   for (uint8_t i = 0; i < N_VOICES; i++) {
-    /*
-    voices[i].bpf1a.setCutoffFreqAndResonance(voices[i].cutoff1, resonance);
-    voices[i].bpf2a.setCutoffFreqAndResonance(voices[i].cutoff2, resonance);
-    voices[i].bpf1b.setCutoffFreqAndResonance(voices[i].cutoff1, resonance);
-    voices[i].bpf2b.setCutoffFreqAndResonance(voices[i].cutoff2, resonance);*/
-
-    voices[i].bpf1a.setCutoffFreqAndResonance(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
-    voices[i].bpf1b.setCutoffFreqAndResonance(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
-    voices[i].bpf2a.setCutoffFreqAndResonance(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
-    voices[i].bpf2b.setCutoffFreqAndResonance(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw(), resonance);
+    voices[i].setBaseNote(midi_base_note);
+    voices[i].setCutoff1(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw());
+    voices[i].setCutoff2(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw());
   }
 }
 
 AudioOutput updateAudio() {
 
-  int32_t bpfed = 0;
+  int32_t out = 0;
   for (uint8_t i = 0; i < N_VOICES; i++) {
-    /*
-      int32_t sub_sample = voices[i].aSub.next() + voices[i].aCos.phMod((voices[i].getMod1() * voices[i].aMod1.phMod((voices[i].getMod2() * voices[i].aMod2.next()) >> 7)) >> 4);
-      sub_sample = voices[i].lpf.next(sub_sample * voices[i].volume);
-      sample += sub_sample;*/
-    int16_t sample = voices[i].aOsc.next() /*+ (rand(-127, 127) >> 0)*/;
-    int32_t sub_sample = voices[i].volume * (voices[i].bpf1b.next(voices[i].bpf1a.next(sample)) + voices[i].bpf2b.next(voices[i].bpf2a.next(sample)));
-    bpfed += sub_sample >> 8;
+    out += voices[i].next();
   }
 
 
   //int32_t bpfed1 = voices[0].bpf1.next(sample) + voices[0].bpf2.next(sample);
 
-  return MonoOutput::fromNBit(9, bpfed).clip();
+  return MonoOutput::fromNBit(20, out).clip();
 }
