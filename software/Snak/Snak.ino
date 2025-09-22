@@ -114,7 +114,8 @@ public:
   /* Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
   Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod1;
   Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;*/
-  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;
+  // Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;
+  MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSub;
   SFix<4, 0> transpose;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSaw;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 21> aSq;
@@ -210,6 +211,21 @@ void setup() {
     aSq1638[i].setTable(SQUARE_MAX_1638_AT_16384_512_DATA);
     aSq2730[i].setTable(SQUARE_MAX_2730_AT_16384_512_DATA);
     aSq8192[i].setTable(SQUARE_MAX_8192_AT_16384_512_DATA);
+
+    aSub154[i].setTable(SAW_MAX_154_AT_16384_512_DATA);
+    aSub182[i].setTable(SAW_MAX_182_AT_16384_512_DATA);
+    aSub221[i].setTable(SAW_MAX_221_AT_16384_512_DATA);
+    aSub282[i].setTable(SAW_MAX_282_AT_16384_512_DATA);
+    aSub356[i].setTable(SAW_MAX_356_AT_16384_512_DATA);
+    aSub431[i].setTable(SAW_MAX_431_AT_16384_512_DATA);
+    aSub546[i].setTable(SAW_MAX_546_AT_16384_512_DATA);
+    aSub630[i].setTable(SAW_MAX_630_AT_16384_512_DATA);
+    aSub744[i].setTable(SAW_MAX_744_AT_16384_512_DATA);
+    aSub910[i].setTable(SAW_MAX_910_AT_16384_512_DATA);
+    aSub1170[i].setTable(SAW_MAX_1170_AT_16384_512_DATA);
+    aSub1638[i].setTable(SAW_MAX_1638_AT_16384_512_DATA);
+    aSub2730[i].setTable(SAW_MAX_2730_AT_16384_512_DATA);
+    aSub8192[i].setTable(SAW_MAX_8192_AT_16384_512_DATA);
   }
   for (int i = 0; i < N_VOICES; i++) {
     voices[i].aSaw.setOscils(&aSaw154[i], &aSaw182[i], &aSaw221[i], &aSaw282[i], &aSaw356[i], &aSaw431[i], &aSaw546[i], &aSaw630[i], &aSaw744[i], &aSaw910[i], &aSaw1170[i], &aSaw1638[i], &aSaw2730[i], &aSaw8192[i]);
@@ -219,7 +235,10 @@ void setup() {
     voices[i].aSq.setCutoffFreqs(75 * 2, 81 * 2, 88 * 2, 96 * 2, 106 * 2, 118 * 2, 134 * 2, 154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2,
                                  546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
     voices[i].aSq.setPhase(256);
-    voices[i].aSub.setTable(COS512_DATA);
+
+    voices[i].aSub.setOscils(&aSub154[i], &aSub182[i], &aSub221[i], &aSub282[i], &aSub356[i], &aSub431[i], &aSub546[i], &aSub630[i], &aSub744[i], &aSub910[i], &aSub1170[i], &aSub1638[i], &aSub2730[i], &aSub8192[i]);
+    voices[i].aSub.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
+    //voices[i].aSub.setTable(COS512_DATA);
     voices[i].setParams(&params);
   }
 
@@ -249,7 +268,7 @@ void setup() {
 
   bp1Mapper.setBounds(0, 4095, 3136, 9344);
   //bp2Mapper.setBounds(0, 4095, 9344, 25600);
-  bp2Mapper.setBounds(0, 4095,25600, 9344);
+  bp2Mapper.setBounds(0, 4095, 25600, 9344);
 
 
 
@@ -347,6 +366,6 @@ AudioOutput updateAudio() {
   }
 
 
-return MonoOutput::fromNBit(18, out).clip();
+  return MonoOutput::fromNBit(18, out).clip();
   //return MonoOutput::fromNBit(18, wf.next(out));  //.clip();
 }
