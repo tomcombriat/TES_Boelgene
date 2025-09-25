@@ -92,7 +92,7 @@ BiPotMultBoost cutoff1Pot(12, 8, 1);
 BiPotMultBoost cutoff2Pot(12, 8, 1);
 
 
-#define N_VOICES 4
+
 #define OSC_NUM_CELLS 512
 
 
@@ -110,15 +110,11 @@ public:
     params = _params;
   };
 
-  // no offense, most things in public, I know what I am doing
-  /* Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aCos;
-  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod1;
-  Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aMod2;*/
-  // Oscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE> aSub;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSub;
   SFix<4, 0> transpose;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 14> aSaw;
   MetaOscil<OSC_NUM_CELLS, MOZZI_AUDIO_RATE, 21> aSq;
+  Oscil<2048, MOZZI_AUDIO_RATE> aAMod;
 
   uint8_t volume;
   //LowPassFilter16 lpf;
@@ -133,6 +129,7 @@ public:
     aSaw.setFreq(freq);
     aSq.setFreq(freq.sR<0>());
     aSub.setFreq(freq.sR<1>());
+    aAMod.setFreq(freq * params->AMfreqRatio);
   }
 
   void setCutoff1(uint16_t _cutoff1) {
@@ -153,10 +150,11 @@ public:
 
 
   int32_t next() {
-    int32_t sample = (params->osc_mix * aSaw.next() + (255 - params->osc_mix) * aSq.next()) >> 8;       // 9bits
-    sample += (aSub.next() * params->sub_level) >> 7;                                                   //10bits
+    int32_t sample = (params->osc_mix * aSaw.next() + (255 - params->osc_mix) * aSq.next()) >> 8;  // 9bits
+    sample += (aSub.next() * params->sub_level) >> 7;
+    //sample = (sample * (aAMod.next() + 127)) >> 8;                                                      //10bits
     int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));  //18
-    return bpfed_sample;
+    return (bpfed_sample * (aAMod.next() + 127))>>8;
   }
 
 private:
@@ -167,7 +165,7 @@ private:
 };
 
 
-Voice voices[N_VOICES];
+Voice voices[POLYPHONY];
 
 void setup() {
 
@@ -226,8 +224,8 @@ void setup() {
     aSub1638[i].setTable(SAW_MAX_1638_AT_16384_512_DATA);
     aSub2730[i].setTable(SAW_MAX_2730_AT_16384_512_DATA);
     aSub8192[i].setTable(SAW_MAX_8192_AT_16384_512_DATA);
-  }
-  for (int i = 0; i < N_VOICES; i++) {
+    //}
+    //for (int i = 0; i < POLYPHONY; i++) {
     voices[i].aSaw.setOscils(&aSaw154[i], &aSaw182[i], &aSaw221[i], &aSaw282[i], &aSaw356[i], &aSaw431[i], &aSaw546[i], &aSaw630[i], &aSaw744[i], &aSaw910[i], &aSaw1170[i], &aSaw1638[i], &aSaw2730[i], &aSaw8192[i]);
     voices[i].aSaw.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
     voices[i].aSq.setOscils(&aSq75[i], &aSq81[i], &aSq88[i], &aSq96[i], &aSq106[i], &aSq118[i], &aSq134[i], &aSq154[i], &aSq182[i], &aSq221[i],
@@ -239,6 +237,7 @@ void setup() {
     voices[i].aSub.setOscils(&aSub154[i], &aSub182[i], &aSub221[i], &aSub282[i], &aSub356[i], &aSub431[i], &aSub546[i], &aSub630[i], &aSub744[i], &aSub910[i], &aSub1170[i], &aSub1638[i], &aSub2730[i], &aSub8192[i]);
     voices[i].aSub.setCutoffFreqs(154 * 2, 182 * 2, 221 * 2, 282 * 2, 356 * 2, 431 * 2, 546 * 2, 630 * 2, 744 * 2, 910 * 2, 1170 * 2, 1638 * 2, 2730 * 2, 8192 * 2);
     //voices[i].aSub.setTable(COS512_DATA);
+    voices[i].aAMod.setTable(COS2048_DATA);
     voices[i].setParams(&params);
   }
 
@@ -349,9 +348,11 @@ void updateControl() {
   midi_base_note = mapper.map(mozziAnalogRead<12>(pitch_pin));
   midi_base_note = midi_base_note + UFixAuto<12>() * SFix<3, 0>(octave);
 
+  params.AMfreqRatio = UFix<2, 10>::fromRaw(mozziAnalogRead<12>(pot5));
+
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
-  for (uint8_t i = 0; i < N_VOICES; i++) {
+  for (uint8_t i = 0; i < POLYPHONY; i++) {
     voices[i].setBaseNote(midi_base_note);
     voices[i].setCutoff1(bp1Mapper.map(cutoff1Pot.getValue(voices[i].volume) >> 4).asRaw());
     voices[i].setCutoff2(bp2Mapper.map(cutoff2Pot.getValue(voices[i].volume) >> 4).asRaw());
@@ -361,7 +362,7 @@ void updateControl() {
 AudioOutput updateAudio() {
 
   int32_t out = 0;
-  for (uint8_t i = 0; i < N_VOICES; i++) {
+  for (uint8_t i = 0; i < POLYPHONY; i++) {
     out += voices[i].next();
   }
 
