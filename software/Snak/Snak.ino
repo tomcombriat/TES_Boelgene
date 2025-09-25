@@ -1,17 +1,15 @@
 /*
-Copyright 2024 Thomas Combriat
+Copyright 2024, 2025 Thomas Combriat/TES
 
 This is licensed under the GPL Licence
 
-This is the main code for the poly-Boelgene, a polyphonic version
-of a small Ondes Nartenot replica.
+This is a variant firmware for the polyphonic version
+of Boelgene, a polyphonic Ondes Martenot inspired instrument.
 
-It features four pressure buttons instead of one, allowing
-different notes to be played simulteanously.
+This implements formant synthesis, with two bandpass filters
+evolving with pressure on the keys, potentially giving voice type
+of sounds.
 
-
-TODO: 
- - maybe make BiPot more efficient by changing const values with templates
 */
 
 #include "MozziConfigValues.h"  // for named option values
