@@ -14,3 +14,7 @@ fp-info-cache# Netlist files (exported from Eeschema)
 *.ses
 *.bin
 *backups*
+
+*.FCBak
+*.SLDPRT
+*.SLDASM

@@ -15,6 +15,7 @@ of sounds.
 #include "MozziConfigValues.h"  // for named option values
 #define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
 #define MOZZI_I2S_FORMAT MOZZI_I2S_FORMAT_LSBJ
+#define MOZZI_BUFFER_SIZE 32
 #define MOZZI_AUDIO_CHANNELS 1
 #define MOZZI_CONTROL_RATE 1024  // Hz, powers of 2 are most reliable
 
@@ -148,7 +149,8 @@ public:
 
 
   int32_t next() {
-    int32_t sample = (params->osc_mix * aSaw.next() + (255 - params->osc_mix) * aSq.next()) >> 8;  // 9bits
+    //int32_t sample = (params->osc_mix * aSaw.next() + (255 - params->osc_mix) * aSq.next()) >> 8;  // 9bits
+    int32_t sample = aSaw.next();  // 8bits
     sample += (aSub.next() * params->sub_level) >> 7;
     //sample = (sample * (aAMod.next() + 127)) >> 8;                                                      //10bits
     int32_t bpfed_sample = volume * (bpf1b.next(bpf1a.next(sample)) + bpf2b.next(bpf2a.next(sample)));  //18
@@ -312,7 +314,7 @@ void loop1() {
   if (last_update_time + 2 < millis()) {
     last_update_time = millis();
 
-    params.osc_mix = adc.analogRead(pot3) >> 2;
+    //params.osc_mix = adc.analogRead(pot3) >> 2;
     params.sub_level = adc.analogRead(pot4) >> 2;
 
     // LPF parameters checking
