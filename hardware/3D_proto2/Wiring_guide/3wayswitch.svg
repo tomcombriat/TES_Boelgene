@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://web.resource.org/cc/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" id="svg1940" sodipodi:version="0.32" inkscape:version="0.44" width="190" height="95" version="1.0" sodipodi:docbase="C:\Documents and Settings\Geoffrey\My Documents\My Pictures" sodipodi:docname="3wayswitch.svg">
+  <metadata id="metadata1945">
+    <rdf:RDF>
+      <cc:Work rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://web.resource.org/cc/PublicDomain"/>
+      </cc:Work>
+      <cc:License rdf:about="http://web.resource.org/cc/PublicDomain">
+        <cc:permits rdf:resource="http://web.resource.org/cc/Reproduction"/>
+        <cc:permits rdf:resource="http://web.resource.org/cc/Distribution"/>
+        <cc:permits rdf:resource="http://web.resource.org/cc/DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <defs id="defs1943"/>
+  <sodipodi:namedview inkscape:window-height="712" inkscape:window-width="1280" inkscape:pageshadow="2" inkscape:pageopacity="0.0" guidetolerance="10000" gridtolerance="10000" objecttolerance="10000" borderopacity="1.0" bordercolor="#666666" pagecolor="#ffffff" id="base" showgrid="true" inkscape:grid-points="true" gridempspacing="5" gridspacingx="1px" gridspacingy="1px" gridoriginx="0px" gridoriginy="0px" inkscape:object-bbox="true" inkscape:object-points="true" inkscape:object-nodes="true" inkscape:guide-points="true" height="95px" inkscape:zoom="5.4315789" inkscape:cx="95" inkscape:cy="47.5" inkscape:window-x="-4" inkscape:window-y="-4" inkscape:current-layer="svg1940"/>
+  <path style="fill:black;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M 0,40 C 0,45 0,45 0,45 L 50,45 L 50,40 L 0,40 z " id="path1990" sodipodi:nodetypes="ccccc"/>
+  <path style="fill:black;fill-opacity:1;stroke:none" d="M 62.5,30 C 55.6,30 50,35.6 50,42.5 C 50,49.4 55.6,55 62.5,55 C 69.4,55 75,49.4 75,42.5 C 75,35.6 69.4,30 62.5,30 z M 62.5,35 C 66.64,35 70,38.36 70,42.5 C 70,46.64 66.64,50 62.5,50 C 58.36,50 55,46.64 55,42.5 C 55,38.36 58.36,35 62.5,35 z " id="path2880"/>
+  <path style="fill:black;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M 145,80 C 145,85 145,85 145,85 L 190,85 L 190,80 L 145,80 z " id="path2889" sodipodi:nodetypes="ccccc"/>
+  <path style="fill:black;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M 145,10 C 145,15 145,15 145,15 L 190,15 L 190,10 L 145,10 z " id="path2891" sodipodi:nodetypes="ccccc"/>
+  <path style="fill:black;fill-opacity:1;stroke:none" d="M 132.5,0 C 125.6,0 120,5.6 120,12.5 C 120,19.4 125.6,25 132.5,25 C 139.4,25 145,19.4 145,12.5 C 145,5.6 139.4,0 132.5,0 z M 132.5,5 C 136.64,5 140,8.36 140,12.5 C 140,16.64 136.64,20 132.5,20 C 128.36,20 125,16.64 125,12.5 C 125,8.36 128.36,5 132.5,5 z " id="path2943"/>
+  <path style="fill:black;fill-opacity:1;stroke:none" d="M 132.5,70 C 125.6,70 120,75.6 120,82.5 C 120,89.4 125.6,95 132.5,95 C 139.4,95 145,89.4 145,82.5 C 145,75.6 139.4,70 132.5,70 z M 132.5,75 C 136.64,75 140,78.36 140,82.5 C 140,86.64 136.64,90 132.5,90 C 128.36,90 125,86.64 125,82.5 C 125,78.36 128.36,75 132.5,75 z " id="path2945"/>
+  <path style="fill:black;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" d="M 73.159457,44.112118 C 70,48.632551 70,48.632551 70,48.632551 L 136.84055,70 L 140,65.479567 L 73.159457,44.112118 z " id="path2947"/>
+</svg>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!--
+  Potentiometer (circuit diagram element, horizontal orientation)
+  Originally produced by K. Bolino, 7 May 2008.
+  
+  Released into the public domain by the author.
+-->
+<svg width="100" height="80" xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <g id="base" fill="none" stroke="black" stroke-width="2">
+    <polyline id="resistor" points="0,40 10,40 15,50 25,30 35,50 45,30 55,50         65,30 75,50 85,30 90,40 100,40"/>
+    <g id="arrow">
+      <line id="stem" x1="50" y1="80" x2="50" y2="50"/>
+      <!--
+        The sides of the arrow's head are 10 units in length and form 30-degree
+        angles with the arrow's stem from its terminal point.
+        
+        left side:
+        x2 = 50 - 5
+        y2 = 50 + 5 * sqrt(3)
+        
+        right side:
+        x2 = 50 + 5
+        y2 = 50 + 5 * sqrt(3)
+      -->
+      <polyline id="head" points="45,58.660254 50,50 55,58.660254"/>
+    </g>
+  </g>
+</svg>
