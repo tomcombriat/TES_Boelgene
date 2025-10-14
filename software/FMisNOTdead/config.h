@@ -1,7 +1,7 @@
 #ifndef _CONFIG_
 #define _CONFIG_
 
-#define POLYPHONY 4
+
 
 
 // Config values, do not change
@@ -9,8 +9,9 @@
 #define PROTO_V2 2
 ///////////////
 
-#define HARDWARE_VERSION PROTO_V2
 
+
+#define HARDWARE_VERSION PROTO_V2
 
 #if (HARDWARE_VERSION == PROTO_V1) // big wood one
 #define PRESSURE0_MIN 22
@@ -38,6 +39,15 @@
 
 #define PRESSURE3_MIN 0
 #define PRESSURE3_MAX 600
+#endif
+
+
+#define FM_RATIO_MOD_FREE
+
+#ifdef FM_RATIO_MOD_FREE
+//#define LUT_FM_RATIO_FULL // add a LUT to the modRatio which flattens on every full integer values, can also be LUT_FM_RATIO_HALF
+#define LUT_FM_RATIO_HALF
+#define LUT_FM_RATIO_TAME 1
 #endif
 
 

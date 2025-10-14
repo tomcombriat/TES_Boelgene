@@ -26,5 +26,7 @@ void loop() {
   Serial.print(adc.analogRead(1));
   Serial.print(" ");
   Serial.println(adc.analogRead(2));
+  Serial.print("   ");
+  Serial.println(analogRead(27));
   delay(100);
 }

@@ -19,6 +19,7 @@ TODO:
 #define MOZZI_I2S_FORMAT MOZZI_I2S_FORMAT_LSBJ
 #define MOZZI_AUDIO_CHANNELS 1
 #define MOZZI_CONTROL_RATE 1024  // Hz, powers of 2 are most reliable
+//#define MOZZI_CONTROL_RATE 256  // Hz, powers of 2 are most reliable
 
 #include <Button.h>  // from TES_eSax-lib
 #include <Mozzi.h>
@@ -152,6 +153,7 @@ voice voices[N_VOICES];
 
 void setup() {
 
+  Serial.begin(115200);
   // Voices initialization
   for (int i = 0; i < N_VOICES; i++) {
     voices[i].aCos.setTable(COS2048_DATA);
@@ -170,6 +172,12 @@ void setup() {
 
   pinMode(refp_pin, INPUT_PULLUP);
   pinMode(led_pin, OUTPUT);
+
+  pinMode(23, OUTPUT);  // thi is to switch to PWM for power to avoid ripple noise
+  digitalWrite(23, HIGH);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
 
   // Mapper from rotary pot value to midi note (from FixMath)
   mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
@@ -331,6 +339,7 @@ void updateControl() {
 
   voices[0].volume = pressure0Mapper.map(mozziAnalogRead<12>(pressure_pin0)).asRaw();
 
+
   for (uint8_t i = 0; i < N_VOICES; i++) voices[i].lpf.setCutoffFreqAndResonance(voices[i].cutoff, resonance);
 
 
@@ -338,7 +347,7 @@ void updateControl() {
   int32_t freqLed2 = abs((mod2Ratio.sL<1>() - UFix<3, 0>(mod2Ratio.sL<1>() + UFix<0, 1>(0.5))).sL<7>().asInt());
   kCosLed1.setFreq(UFix<14, 2>().fromRaw(freqLed1 << 2));
   kCosLed2.setFreq(UFix<14, 2>().fromRaw(freqLed2 << 2));
-  analogWrite(led_pin, (((int16_t(kCosLed1.next()) + 127)) + ((int16_t(kCosLed2.next())) >> 1) + 63)>>1); // ideally two leds… (use the octave indicators in future?)
+  //analogWrite(led_pin, (((int16_t(kCosLed1.next()) + 127)) + ((int16_t(kCosLed2.next())) >> 1) + 63) >> 1);  // ideally two leds… (use the octave indicators in future?)
 }
 
 AudioOutput updateAudio() {
@@ -362,5 +371,6 @@ AudioOutput updateAudio() {
       sample += sub_sample;
     }
   }
-  return MonoOutput::fromNBit(18, sample).clip();
+  //return MonoOutput::fromNBit(18, sample).clip();
+  return MonoOutput::fromNBit(16, sample).clip();
 }
