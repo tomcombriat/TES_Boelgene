@@ -322,7 +322,11 @@ void updateControl() {
   }
   if (!digitalRead(refp_pin)) {
     pitch_pot_max = mozziAnalogRead<12>(pitch_pin);
+#if (HARDWARE_VERSION == PROTO_V1)  // big wood one
     mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
+#elif (HARDWARE_VERSION == PROTO_V2)  // small wood one
+    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 19);
+#endif
   }
 
   mod2Pot.setValue(mozziAnalogRead<12>(pot5));
@@ -372,5 +376,5 @@ AudioOutput updateAudio() {
     }
   }
   //return MonoOutput::fromNBit(18, sample).clip();
-  return MonoOutput::fromNBit(16, sample).clip();
+  return MonoOutput::fromNBit(17, sample).clip();
 }
