@@ -15,8 +15,8 @@ TODO:
 */
 
 #include "MozziConfigValues.h"  // for named option values
-#define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
-#define MOZZI_I2S_FORMAT MOZZI_I2S_FORMAT_LSBJ
+#include "config.h"
+
 #define MOZZI_AUDIO_CHANNELS 1
 #define MOZZI_CONTROL_RATE 1024  // Hz, powers of 2 are most reliable
 //#define MOZZI_CONTROL_RATE 256  // Hz, powers of 2 are most reliable
@@ -36,7 +36,7 @@ TODO:
 
 #include <SPI.h>
 #include <MCP3XXX.h>
-#include "config.h"
+
 
 #if (defined LUT_FM_RATIO_FULL || defined LUT_FM_RATIO_HALF)
 #include "modRatioLUT.hpp"
@@ -318,15 +318,12 @@ void updateControl() {
   /* Ref min and max */
   if (!digitalRead(refm_pin)) {
     pitch_pot_min = mozziAnalogRead<12>(pitch_pin);
-    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
+    mapper.setBounds(pitch_pot_min, pitch_pot_max, REFM_NOTE, REFP_NOTE);
+
   }
   if (!digitalRead(refp_pin)) {
     pitch_pot_max = mozziAnalogRead<12>(pitch_pin);
-#if (HARDWARE_VERSION == PROTO_V1)  // big wood one
-    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
-#elif (HARDWARE_VERSION == PROTO_V2)  // small wood one
-    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 19);
-#endif
+    mapper.setBounds(pitch_pot_min, pitch_pot_max, REFM_NOTE, REFP_NOTE);
   }
 
   mod2Pot.setValue(mozziAnalogRead<12>(pot5));
