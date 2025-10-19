@@ -31,6 +31,7 @@
 
 #define REFM_NOTE 48
 #define REFP_NOTE REFM_NOTE + 24
+#define led_pin 6
 
 
 #elif (HARDWARE_VERSION == PROTO_V2)  // small wood one
@@ -48,6 +49,8 @@
 
 #define REFM_NOTE 46
 #define REFP_NOTE REFM_NOTE + 19
+
+#define led_pin LED_BUILTIN
 #endif
 
 

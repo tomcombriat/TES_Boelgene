@@ -55,7 +55,7 @@ MCP3XXX_<10, 8, 300000> adc;
 
 // Pin mapping
 const uint8_t pot0 = 3, pot1 = 4, pot2 = 5, pot3 = 6, pot4 = 7, pot5 = 28;
-const uint8_t pitch_pin = 27, octm_pin = 9, octp_pin = 8, refm_pin = 7, refp_pin = 3, led_pin = 6;
+const uint8_t pitch_pin = 27, octm_pin = 9, octp_pin = 8, refm_pin = 7, refp_pin = 3;
 const uint8_t pressure_pin0 = 26, pressure_pin1 = 0, pressure_pin2 = 1, pressure_pin3 = 2;
 
 // Octaves plus and minus buttons
@@ -170,7 +170,6 @@ void setup() {
   pinMode(pitch_pin, INPUT);
   pinMode(pot5, INPUT);
 
-  pinMode(refp_pin, INPUT_PULLUP);
   pinMode(led_pin, OUTPUT);
 
   pinMode(23, OUTPUT);  // thi is to switch to PWM for power to avoid ripple noise
@@ -188,14 +187,13 @@ void setup() {
   pressure3Mapper.setBounds(PRESSURE3_MIN, PRESSURE3_MAX, 0, 255);
 
 
-
   startMozzi(MOZZI_CONTROL_RATE);
-  pinMode(refm_pin, INPUT_PULLUP);
+
+  pinMode(refm_pin, INPUT_PULLUP);  // has to be put after the start
   pinMode(refp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
-  pinMode(octm_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
-  pinMode(octp_pin, INPUT_PULLUP);  // otherwise the pin3 is erratic, why? Might be worth an issue.
-  pinMode(led_pin, OUTPUT);
-  //digitalWrite(led_pin, HIGH);
+  pinMode(octm_pin, INPUT_PULLUP);
+  pinMode(octp_pin, INPUT_PULLUP);
+
   analogWriteRange(255);
 }
 
@@ -319,7 +317,6 @@ void updateControl() {
   if (!digitalRead(refm_pin)) {
     pitch_pot_min = mozziAnalogRead<12>(pitch_pin);
     mapper.setBounds(pitch_pot_min, pitch_pot_max, REFM_NOTE, REFP_NOTE);
-
   }
   if (!digitalRead(refp_pin)) {
     pitch_pot_max = mozziAnalogRead<12>(pitch_pin);
@@ -348,7 +345,7 @@ void updateControl() {
   int32_t freqLed2 = abs((mod2Ratio.sL<1>() - UFix<3, 0>(mod2Ratio.sL<1>() + UFix<0, 1>(0.5))).sL<7>().asInt());
   kCosLed1.setFreq(UFix<14, 2>().fromRaw(freqLed1 << 2));
   kCosLed2.setFreq(UFix<14, 2>().fromRaw(freqLed2 << 2));
-  //analogWrite(led_pin, (((int16_t(kCosLed1.next()) + 127)) + ((int16_t(kCosLed2.next())) >> 1) + 63) >> 1);  // ideally two leds… (use the octave indicators in future?)
+  analogWrite(led_pin, (((int16_t(kCosLed1.next()) + 127)) + ((int16_t(kCosLed2.next())) >> 1) + 63) >> 1);  // ideally two leds… (use the octave indicators in future?)
 }
 
 AudioOutput updateAudio() {
@@ -372,6 +369,5 @@ AudioOutput updateAudio() {
       sample += sub_sample;
     }
   }
-  //return MonoOutput::fromNBit(18, sample).clip();
-  return MonoOutput::fromNBit(17, sample).clip();
+  return MonoOutput::fromNBit(18, sample).clip();
 }
