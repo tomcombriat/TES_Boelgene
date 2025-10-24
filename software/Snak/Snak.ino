@@ -13,10 +13,8 @@ of sounds.
 */
 
 #include "MozziConfigValues.h"  // for named option values
-#define MOZZI_AUDIO_MODE MOZZI_OUTPUT_I2S_DAC
-#define MOZZI_I2S_FORMAT MOZZI_I2S_FORMAT_LSBJ
+#include "config.h"
 #define MOZZI_BUFFER_SIZE 32
-#define MOZZI_AUDIO_CHANNELS 1
 #define MOZZI_CONTROL_RATE 1024  // Hz, powers of 2 are most reliable
 
 #include <Button.h>  // from TES_eSax-lib
@@ -62,7 +60,7 @@ MCP3XXX_<10, 8, 300000> adc;
 
 // Pin mapping
 const uint8_t pot0 = 3, pot1 = 4, pot2 = 5, pot3 = 6, pot4 = 7, pot5 = 28;
-const uint8_t pitch_pin = 27, octm_pin = 9, octp_pin = 8, refm_pin = 7, refp_pin = 3, led_pin = 6;
+const uint8_t pitch_pin = 27, octm_pin = 9, octp_pin = 8, refm_pin = 7, refp_pin = 3;
 const uint8_t pressure_pin0 = 26, pressure_pin1 = 0, pressure_pin2 = 1, pressure_pin3 = 2;
 
 // Octaves plus and minus buttons
@@ -337,11 +335,11 @@ void updateControl() {
   /* Ref min and max */
   if (!digitalRead(refm_pin)) {
     pitch_pot_min = mozziAnalogRead<12>(pitch_pin);
-    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
+    mapper.setBounds(pitch_pot_min, pitch_pot_max, REFM_NOTE, REFP_NOTE);
   }
   if (!digitalRead(refp_pin)) {
     pitch_pot_max = mozziAnalogRead<12>(pitch_pin);
-    mapper.setBounds(pitch_pot_min, pitch_pot_max, 48, 48 + 24);
+    mapper.setBounds(pitch_pot_min, pitch_pot_max, REFM_NOTE, REFP_NOTE);
   }
 
 
